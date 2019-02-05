@@ -1,0 +1,22 @@
+ideas for improving control system
+
+Holding down input buttons:
+https://forum.arduino.cc/index.php?topic=521368.0
+
+if(irrecv.decode(&results))
+ {
+    if(results.value != rep){ x=results.value;}
+   
+    while(x==up) 
+     {
+      digitalWrite(13,1);
+      
+     }
+    digitalWrite(13,0);
+
+    irrecv.resume();
+
+ } 
+ 
+ 
+ 
