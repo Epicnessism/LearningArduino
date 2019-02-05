@@ -10,8 +10,8 @@
 //PIN DECLARATIONS______________________________________________
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //initializing used pins
 const int RECV_PIN = 8; //initializing pin used for IR
-const int redPin = 9; //for LED data passthroughs
-const int greenPin = 10; //for LED data passthroughs
+const int redPin = 10; //for LED data passthroughs
+const int greenPin = 9; //for LED data passthroughs
 //for LBSA-1 output control
 const int ENABLE1 =11; //Pulse pin on the board
 const int DIR1 = 12; //Direction pin on the board
@@ -29,8 +29,16 @@ const int PULSE2 = 16; //Enable pin on the board
 //GLOBAL VARIABLE DECLARATIONS_________________________________
 IRrecv irrecv(RECV_PIN); //initialize the IR receiver object
 decode_results results; //results from IR sensors but wtf type is this
+
 unsigned long key_value = 0; //current/previous hex value
-int numberOfSteps = 1600; //some arbitrary value/related to Microsteps and LBSAs
+
+int stepsToInch = 4050; //current arbitrary value for calculating inches to steps
+
+float numberOfSteps = 1600; //some arbitrary value/related to Microsteps and LBSAs
+
+int pulseDuration = 200;
+
+// float stepDiff = 0;
 
 
 //spring values and activeSpring, and user input activeString
@@ -92,6 +100,32 @@ void setup(){
   pinMode(PULSE2, OUTPUT);
 }
 
+//takes in cur spring val and new spring val, cur spring, and it's 3 pinNums //TODO ISSUE WITH ROUNDING
+float moveSpecificLBSA(float currentSpringValue, float newSpringValue, String currentSpring, int dir, int enable, int pulse) {
+  lcd.print("Was:" + String(currentSpringValue) + " To:" + String(newSpringValue));
+
+  //doing math conversion from inches to steps
+  Serial.println("new " + currentSpring + " is: " + String(newSpringValue));
+  Serial.println("current " + currentSpring + " is: " + String(currentSpringValue));
+  numberOfSteps = abs(newSpringValue - currentSpringValue) * stepsToInch;
+  Serial.println("number of steps to take is: " + String(numberOfSteps));
+
+  for(int i = 0; i < numberOfSteps; i++) {
+    if((newSpringValue - currentSpringValue) < 0) {
+      digitalWrite(dir, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
+    }
+    else {
+      digitalWrite(dir, HIGH); //THIS GOES Forward or away from the motor
+    }
+    digitalWrite(enable, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
+    digitalWrite(pulse, HIGH); //activates pulse
+    delayMicroseconds(pulseDuration);
+    digitalWrite(pulse, LOW); //turns off the pulse
+    delayMicroseconds(pulseDuration);
+  }
+  return newSpringValue;
+}
+
 
 void loop(){
   if (irrecv.decode(&results)){
@@ -137,7 +171,7 @@ void loop(){
 			Serial.println("results.value is a zero hex value dude...");
 		}
 
-		lcd.setCursor(0,1); //second row //default set to second row, eliminates ~13 lines of code
+		// lcd.setCursor(0,1); //second row //default set to second row, eliminates ~13 lines of code
         switch(results.value){
           case 0XFFFFFFFF: //wtf is this for?? //TODO
           break;
@@ -193,42 +227,30 @@ void loop(){
           break;
 
           case volumeUpButton:
-          lcd.print("Vol+"); //TODO ASSIGN FUNCTIONALITY
-          //set numberOfSteps i to active value
-          numberOfSteps = activeString.toFloat();
+          lcd.print("Vol+"); //TODO NEED A DIFF KEY FOR THIS
+          //set pulseDuration i to active value
+          pulseDuration = activeString.toFloat();
           activeString="";
 
-          break ;
+          break;
 
+          //calculates direction and stepDifference for the front Spring
+          //FRONT LBSA1
           case volumeDownButton:
-          lcd.print("Vol-"); //TODO ASSIGN FUNCTIONALITY
-          break ;
+            frontSpringValue = moveSpecificLBSA(frontSpringValue,newFrontSpringValue, "Front", DIR1, ENABLE1, PULSE1);
+          break;
 
 		      //Next Button
+          //Direction LOW
+          //LEFT LBSA2
           case nextButton:
-		      lcd.print("UP: DIR1 LOW");
-          for(int i = 0; i < numberOfSteps; i++) {
-            digitalWrite(DIR1, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-            digitalWrite(ENABLE1, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
-            digitalWrite(PULSE1, HIGH); //activates pulse
-            delayMicroseconds(activeString.toInt());
-			      digitalWrite(PULSE1, LOW); //turns off the pulse
-            // delayMicroseconds(activeString.toInt());
-          }
-          break ;
+            leftSpringValue = moveSpecificLBSA(leftSpringValue,newLeftSpringValue, "Left", DIR2, ENABLE2, PULSE2);
+          break;
 
           //Previous Button
           case backButton:
-          lcd.print("DOWN: DIR1 HIGH");
-          for(int i = 0; i < numberOfSteps; i++) {
-            digitalWrite(DIR1, HIGH); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-            digitalWrite(ENABLE1, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
-            digitalWrite(PULSE1, HIGH); //activates pulse
-            delayMicroseconds(activeString.toInt());
-            digitalWrite(PULSE1, LOW); //turns off the pulse
-            // delayMicroseconds(activeString.toInt());
-          }
-          break ;
+          // lcd.print("DOWN: DIR1 LOW");
+          break;
 
           case playStopButton:
           lcd.print("Play/Stop"); //execute movements/calculations
@@ -241,79 +263,61 @@ void loop(){
             digitalWrite(DIR2, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
             digitalWrite(ENABLE2, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
 
-
             digitalWrite(PULSE1, HIGH); //activates pulse
             digitalWrite(PULSE2, HIGH); //activates pulse
 
-            delayMicroseconds(activeString.toInt());
+            delayMicroseconds(pulseDuration);
 
             digitalWrite(PULSE1, LOW); //turns off the pulse
             digitalWrite(PULSE2, LOW); //turns off the pulse
 
-            delayMicroseconds(activeString.toInt());
+            delayMicroseconds(pulseDuration);
           }
 
 
           digitalWrite(redPin, LOW); //start actions
 
-          break ;
+          break;
 
           case upButton: //linear actuators up
-		      lcd.print("UP: DIR2 LOW");
-          for(int i = 0; i < numberOfSteps; i++) {
-            digitalWrite(DIR2, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-            digitalWrite(ENABLE2, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
-            digitalWrite(PULSE2, HIGH); //activates pulse
-            delayMicroseconds(activeString.toInt());
-			      digitalWrite(PULSE2, LOW); //turns off the pulse
-            delayMicroseconds(activeString.toInt());
-          }
-          break ;
+		      // lcd.print("UP: DIR2 LOW");
+          break;
 
           case downButton: //linear actuators down
-          lcd.print("DOWN: DIR2 HIGH");
-          for(int i = 0; i < numberOfSteps; i++) {
-            digitalWrite(DIR2, HIGH); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-            digitalWrite(ENABLE2, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
-            digitalWrite(PULSE2, HIGH); //activates pulse
-            delayMicroseconds(activeString.toInt());
-            digitalWrite(PULSE2, LOW); //turns off the pulse
-            delayMicroseconds(activeString.toInt());
-          }
-          break ;
+          // lcd.print("DOWN: DIR2 HIGH");
+          break;
 
 		  //NOTE: Power Button
           case powerButton:
-          activeString="";
-		  lcd.setCursor(0,0); //first column, first row
-		  lcd.print("Nothing before <");
-		  lcd.setCursor(0,1); //first column, second row
-		  lcd.print(activeString); //does a printcheck, if printed something is wrong
-		  lcd.print("<");
-          break ;
+            activeString="";
+      		  lcd.setCursor(0,0); //first column, first row
+      		  lcd.print("Nothing before <");
+      		  lcd.setCursor(0,1); //first column, second row
+      		  lcd.print(activeString); //does a printcheck, if printed something is wrong
+      		  lcd.print("<");
+          break;
 
 		  //Func/Stop button
           case funcStopButton:
-		  switch(activeSpring){
-            case 0:
-            lcd.print("Front: ");
-            lcd.print(frontSpringValue,6);
-            break;
-            case 1:
-            lcd.print("Left: ");
-            lcd.print(leftSpringValue,6);
-            break;
-            case 2:
-            lcd.print("Rear: ");
-            lcd.print(rearSpringValue,6);
-            break;
-            case 3:
-            lcd.print("Right: ");
-            lcd.print(rightSpringValue,6);
-            break;
-          }
-
-          break ;
+		        switch(activeSpring){
+              case 0:
+              lcd.print("Front: ");
+              lcd.print(frontSpringValue,6);
+              break;
+              case 1:
+              lcd.print("Left: ");
+              lcd.print(leftSpringValue,6);
+              break;
+              case 2:
+              lcd.print("Rear: ");
+              lcd.print(rearSpringValue,6);
+              break;
+              case 3:
+              lcd.print("Right: ");
+              lcd.print(rightSpringValue,6);
+              break;
+            }
+          break;
 
           //Note: this is "EQ" button
           case eqDecimalButton:
@@ -330,27 +334,27 @@ void loop(){
           boolean completion = true;
           switch(activeSpring) {
             case 0: //front
-            frontSpringValue = activeString.toFloat();
+            newFrontSpringValue = activeString.toFloat();
             lcd.print("Front set: ");
-			lcd.print(frontSpringValue,6);
+			      lcd.print(newFrontSpringValue,6);
             break;
 
             case 1: //left
-            leftSpringValue = activeString.toFloat();
+            newLeftSpringValue = activeString.toFloat();
             lcd.print("Left set: ");
-			lcd.print(leftSpringValue,6);
+			      lcd.print(newLeftSpringValue,6);
             break;
 
             case 2: //rear
-            rearSpringValue = activeString.toFloat();
+            newRearSpringValue = activeString.toFloat();
             lcd.print("Rear set: ");
-			lcd.print(rearSpringValue,6);
+			      lcd.print(newRearSpringValue,6);
             break;
 
             case 3: //right
-            rightSpringValue = activeString.toFloat();
+            newRightSpringValue = activeString.toFloat();
             lcd.print("Right set: ");
-			lcd.print(rightSpringValue,6);
+			      lcd.print(newRightSpringValue,6);
             break;
 
             default:
@@ -370,7 +374,7 @@ void loop(){
             delay(500);
             digitalWrite(redPin, LOW);
 		  }
-          break ;
+          break;
         } //end switchRemote
 
         if(results.value != 0XFFFFFFFF) { //TODO: wtf does this do?
