@@ -8,25 +8,29 @@
 
 
 //PIN DECLARATIONS______________________________________________
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2); //initializing used pins
-const int RECV_PIN = 7; //initializing pin used for IR
-const int redPin = 10; //for LED data passthroughs
-const int greenPin = 9; //for LED data passthroughs
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //initializing used pins
+const int RECV_PIN = 8; //initializing pin used for IR
+const int redPin = 9; //for LED data passthroughs
+const int greenPin = 10; //for LED data passthroughs
 //for LBSA-1 output control
-const int ENABLE1 = 6; //Pulse pin on the board
-const int DIR1 = 8; //Direction pin on the board
+const int ENABLE1 =11; //Pulse pin on the board
+const int DIR1 = 12; //Direction pin on the board
 const int PULSE1 = 13; //Enable pin on the board
-//for LBSA-1 state control
-int ENABLE1STATE = 1;
-int DIR1STATE = 1;
-int PULSE1STATE = 1;
+//for LBSA-2 output control
+const int ENABLE2 = 14; //Pulse pin on the board
+const int DIR2 = 15; //Direction pin on the board
+const int PULSE2 = 16; //Enable pin on the board
+// //for LBSA-1 state control
+// int ENABLE1STATE = 1;
+// int DIR1STATE = 1;
+// int PULSE1STATE = 1;
 
 
 //GLOBAL VARIABLE DECLARATIONS_________________________________
 IRrecv irrecv(RECV_PIN); //initialize the IR receiver object
 decode_results results; //results from IR sensors but wtf type is this
 unsigned long key_value = 0; //current/previous hex value
-int desired = 3200; //some arbitrary value/related to Microsteps and LBSAs
+int numberOfSteps = 1600; //some arbitrary value/related to Microsteps and LBSAs
 
 
 //spring values and activeSpring, and user input activeString
@@ -39,7 +43,7 @@ float newLeftSpringValue; //where it wants to go
 float rightSpringValue; //R where it is
 float newRightSpringValue; //where it wants to go
 char activeSpring = -1; //which spring value to set/change
-String activeString; //user inputted desired value
+String activeString; //user inputted wanted value
 
 
 //IR HEX VALUES TO VARIABLES
@@ -81,6 +85,11 @@ void setup(){
   pinMode(ENABLE1, OUTPUT);
   pinMode(DIR1, OUTPUT);
   pinMode(PULSE1, OUTPUT);
+
+  //LBSA2 pinMode declaration
+  pinMode(ENABLE2, OUTPUT);
+  pinMode(DIR2, OUTPUT);
+  pinMode(PULSE2, OUTPUT);
 }
 
 
@@ -103,12 +112,23 @@ void loop(){
             activeSpring = 0;
           }
         }
-        //Holding down forward/right
+        //Holding down forward/right lbsa1
         else if (key_value == 0xFFC23D && results.value == 0XFFFFFFFF) { //TODO THIS DOESNT WORK?
           results.value = key_value;
         }
         //Holding down back/left
         else if (key_value == 0xFF22DD && results.value == 0XFFFFFFFF) {
+          results.value = key_value;
+        }
+        //Holding down up/down buttons lbsa2
+        else if (key_value == 0xFF906F && results.value == 0XFFFFFFFF) { //TODO THIS DOESNT WORK?
+          results.value = key_value;
+        }
+        //Holding down back/left
+        else if (key_value == 0xFFE01F && results.value == 0XFFFFFFFF) {
+          results.value = key_value;
+        }
+        else if (key_value == 0xFF02FD && results.value == 0XFFFFFFFF) {
           results.value = key_value;
         }
 
@@ -174,54 +194,92 @@ void loop(){
 
           case volumeUpButton:
           lcd.print("Vol+"); //TODO ASSIGN FUNCTIONALITY
+          //set numberOfSteps i to active value
+          numberOfSteps = activeString.toFloat();
+          activeString="";
+
           break ;
 
           case volumeDownButton:
           lcd.print("Vol-"); //TODO ASSIGN FUNCTIONALITY
           break ;
 
-		  //Next Button
+		      //Next Button
           case nextButton:
-		  lcd.print(rightSpringValue);
-          for(int i = 0; i < desired; i++) {
+		      lcd.print("UP: DIR1 LOW");
+          for(int i = 0; i < numberOfSteps; i++) {
             digitalWrite(DIR1, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
             digitalWrite(ENABLE1, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
             digitalWrite(PULSE1, HIGH); //activates pulse
             delayMicroseconds(activeString.toInt());
-			digitalWrite(PULSE1, LOW); //turns off the pulse
-            delayMicroseconds(activeString.toInt());
+			      digitalWrite(PULSE1, LOW); //turns off the pulse
+            // delayMicroseconds(activeString.toInt());
           }
           break ;
 
           //Previous Button
           case backButton:
-          lcd.print(leftSpringValue);
-          for(int i = 0; i < desired; i++) {
+          lcd.print("DOWN: DIR1 HIGH");
+          for(int i = 0; i < numberOfSteps; i++) {
             digitalWrite(DIR1, HIGH); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
             digitalWrite(ENABLE1, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
             digitalWrite(PULSE1, HIGH); //activates pulse
             delayMicroseconds(activeString.toInt());
             digitalWrite(PULSE1, LOW); //turns off the pulse
-            delayMicroseconds(activeString.toInt());
+            // delayMicroseconds(activeString.toInt());
           }
           break ;
 
           case playStopButton:
           lcd.print("Play/Stop"); //execute movements/calculations
-          if (digitalRead(redPin) == 1) { //0 if low, 1 if high
-            digitalWrite(redPin, LOW); //stop actions
+          digitalWrite(redPin, HIGH); //stop actions
+
+          for(int i = 0; i < numberOfSteps; i++) {
+            digitalWrite(DIR1, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
+            digitalWrite(ENABLE1, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
+
+            digitalWrite(DIR2, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
+            digitalWrite(ENABLE2, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
+
+
+            digitalWrite(PULSE1, HIGH); //activates pulse
+            digitalWrite(PULSE2, HIGH); //activates pulse
+
+            delayMicroseconds(activeString.toInt());
+
+            digitalWrite(PULSE1, LOW); //turns off the pulse
+            digitalWrite(PULSE2, LOW); //turns off the pulse
+
+            delayMicroseconds(activeString.toInt());
           }
-          else {
-            digitalWrite(redPin, HIGH); //start actions
-          }
+
+
+          digitalWrite(redPin, LOW); //start actions
+
           break ;
 
           case upButton: //linear actuators up
-          lcd.print("Up");
+		      lcd.print("UP: DIR2 LOW");
+          for(int i = 0; i < numberOfSteps; i++) {
+            digitalWrite(DIR2, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
+            digitalWrite(ENABLE2, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
+            digitalWrite(PULSE2, HIGH); //activates pulse
+            delayMicroseconds(activeString.toInt());
+			      digitalWrite(PULSE2, LOW); //turns off the pulse
+            delayMicroseconds(activeString.toInt());
+          }
           break ;
 
           case downButton: //linear actuators down
-          lcd.print("Down");
+          lcd.print("DOWN: DIR2 HIGH");
+          for(int i = 0; i < numberOfSteps; i++) {
+            digitalWrite(DIR2, HIGH); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
+            digitalWrite(ENABLE2, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
+            digitalWrite(PULSE2, HIGH); //activates pulse
+            delayMicroseconds(activeString.toInt());
+            digitalWrite(PULSE2, LOW); //turns off the pulse
+            delayMicroseconds(activeString.toInt());
+          }
           break ;
 
 		  //NOTE: Power Button
