@@ -285,6 +285,7 @@ void loop(){
 
           case downButton: //linear actuators down
           // lcd.print("DOWN: DIR2 HIGH");
+
           break;
 
 		  //NOTE: Power Button
