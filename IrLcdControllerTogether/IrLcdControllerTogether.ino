@@ -20,10 +20,10 @@ const int PULSE1 = 13; //Enable pin on the board
 const int ENABLE2 = 14; //Pulse pin on the board
 const int DIR2 = 15; //Direction pin on the board
 const int PULSE2 = 16; //Enable pin on the board
-// //for LBSA-1 state control
-// int ENABLE1STATE = 1;
-// int DIR1STATE = 1;
-// int PULSE1STATE = 1;
+// //for LBSA-3 state control
+// int ENABLE1STATE = ;
+// int DIR1STATE = ;
+// int PULSE1STATE = ;
 
 
 //GLOBAL VARIABLE DECLARATIONS_________________________________
@@ -44,12 +44,16 @@ int pulseDuration = 200;
 //spring values and activeSpring, and user input activeString
 float frontSpringValue; //F where it is
 float newFrontSpringValue; //where it wants to go
+
 float rearSpringValue; //B where it is
 float newRearSpringValue; //where it wants to go
+
 float leftSpringValue; //L where it is
 float newLeftSpringValue; //where it wants to go
+
 float rightSpringValue; //R where it is
 float newRightSpringValue; //where it wants to go
+
 char activeSpring = -1; //which spring value to set/change
 String activeString; //user inputted wanted value
 
@@ -124,6 +128,10 @@ float moveSpecificLBSA(float currentSpringValue, float newSpringValue, String cu
     delayMicroseconds(pulseDuration);
   }
   return newSpringValue;
+}
+
+float concurrent_movement_LBSAs() {
+
 }
 
 
