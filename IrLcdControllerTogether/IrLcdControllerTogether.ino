@@ -25,11 +25,11 @@ const int PULSE2 = 16; //Enable pin on the board
 // int DIR1STATE = ;
 // int PULSE1STATE = ;
 
-const String lbsaArray[] = ["front","left","rear","right"];
+char *lbsaArray[] = {"front","left","rear","right"};
 
-const int enableArray[] = [11,14]; //front,left,rear,right
-const int dirArray[] = [12,15]; //front,left,rear,right
-const int pulseArray[] = [13,16]; //front,left,rear,right
+int enableArray[] = {11,14}; //front,left,rear,right
+int dirArray[] = {12,15}; //front,left,rear,right
+int pulseArray[] = {13,16}; //front,left,rear,right
 
 //GLOBAL VARIABLE DECLARATIONS_________________________________
 IRrecv irrecv(RECV_PIN); //initialize the IR receiver object
@@ -146,22 +146,28 @@ float concurrent_movement_LBSAs() {
   // float deltaArray[] = { newFrontSpringValue - frontSpringValue, newLeftSpringValue - leftSpringValue, newRightSpringValue - rightSpringValue, newRearSpringValue - rearSpringValue};
   //for testing only
   // float deltaArray[] = { newSpringValues[0] - currentSpringValues[0], newSpringValues[1] - currentSpringValues[1]};
-  float deltaArray[] = { newFrontSpringValue - frontSpringValue, newLeftSpringValue - leftSpringValue };
-
+  float deltaArray[] = { newFrontSpringValue - frontSpringValue, newLeftSpringValue - leftSpringValue};
+  int arraySize = sizeof(deltaArray)/sizeof(float); //TESTING, CHANGE IT TO
 
   //find distances that need to be traveled
   float deltaMin = deltaArray[0]; //set up the deltaMin first
-  for(int i=1; i < sizeof(deltaArray); i++) {
+  // Serial.print("Size of deltaArray: ");
+  // Serial.println(sizeof(deltaArray));
+  for(int i=1; i < arraySize; i++) {
     if ( deltaArray[i] != 0 ) {
+      Serial.println("DeltaArray"); //TESTING
+      Serial.println(deltaArray[i]); //TESTING
       deltaMin = min(deltaMin, abs(deltaArray[i]));
+      // Serial.println(deltaMin); //TESTING
     }
   }
 
   //do pulseDuration math
   numberOfSteps = abs(deltaMin) * stepsToInch;
 
+
   //determine directions of each LBSA
-  for(int i=0; i < sizeof(deltaArray); i++) {
+  for(int i=0; i < arraySize; i++) {
     if(deltaArray < 0) {
       digitalWrite(dirArray[i], LOW);
     }
@@ -172,34 +178,41 @@ float concurrent_movement_LBSAs() {
     digitalWrite(pulseArray[i], HIGH);
   }
 
+
+  Serial.println("Running pulses");
   //run the pulse for this number of steps
   for (int i=0; i < numberOfSteps; i++) {
     delayMicroseconds(pulseDuration);
   }
 
   //turn off all the pins
-  for(int i=0; i < sizeof(deltaArray)) {
+  for(int i=0; i < arraySize; i++) {
     digitalWrite(pulseArray[i], LOW);
   }
+  Serial.println("Finished running pulses"); //TESTING
 
   //do distance updation
-  for(int i=1; i < sizeof(deltaArray); i++) {
+  for(int i=1; i < arraySize; i++) {
     if ( deltaArray[i] > 0 ) {
+      deltaArray[i] = deltaArray[i] - deltaMin;
     }
-    deltaArray[i] = deltaArray[i] - deltaMin;
     else if ( deltaArray[i] < 0) {
       deltaArray[i] = deltaArray[i] + deltaMin;
     }
   }
-
-  //as long as there is a non-zero delta, recursive call
-  //can probably put this in the calling function?
-  for(int i=1; i < sizeof(deltaArray); i++) {
-    if ( deltaArray[i] != 0 ) {
-      concurrent_movement_LBSAs();
-      break;
-    }
+  Serial.println("new Delta values:");
+  for(int i=0; i < arraySize; i++) {
+    Serial.println(deltaArray[i]);
   }
+
+  // //as long as there is a non-zero delta, recursive call
+  // //can probably put this in the calling function?
+  // for(int i=1; i < arraySize; i++) {
+  //   if ( deltaArray[i] != 0 ) {
+  //     concurrent_movement_LBSAs();
+  //     break;
+  //   }
+  // }
 
 }
 
@@ -331,28 +344,13 @@ void loop(){
 
           case playStopButton:
           lcd.print("Play/Stop"); //execute movements/calculations
-          digitalWrite(redPin, HIGH); //stop actions
+          digitalWrite(redPin, HIGH); //start actions
 
-          for(int i = 0; i < numberOfSteps; i++) {
-            digitalWrite(DIR1, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-            digitalWrite(ENABLE1, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
-
-            digitalWrite(DIR2, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-            digitalWrite(ENABLE2, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
-
-            digitalWrite(PULSE1, HIGH); //activates pulse
-            digitalWrite(PULSE2, HIGH); //activates pulse
-
-            delayMicroseconds(pulseDuration);
-
-            digitalWrite(PULSE1, LOW); //turns off the pulse
-            digitalWrite(PULSE2, LOW); //turns off the pulse
-
-            delayMicroseconds(pulseDuration);
-          }
+          concurrent_movement_LBSAs();
 
 
-          digitalWrite(redPin, LOW); //start actions
+
+          digitalWrite(redPin, LOW); //stop actions
 
           break;
 
