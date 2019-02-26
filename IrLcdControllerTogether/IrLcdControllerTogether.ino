@@ -45,21 +45,21 @@ int pulseDuration = 200;
 
 // float stepDiff = 0;
 
-// float currentSpringValues[] = [0,0,0,0] //front,left,rear,right
-// float newSpringValues[] = [0,0,0,0] //front,left,rear,right
+float currentSpringValues[] = {0,0,0,0}; //front,left,rear,right
+float newSpringValues[] = {0,0,0,0}; //front,left,rear,right
 
 //spring values and activeSpring, and user input activeString
-float frontSpringValue; //F where it is
-float newFrontSpringValue; //where it wants to go
+float frontSpringValue=0; //F where it is
+float newFrontSpringValue=0; //where it wants to go
 
-float rearSpringValue; //B where it is
-float newRearSpringValue; //where it wants to go
+float rearSpringValue=0; //B where it is
+float newRearSpringValue=0; //where it wants to go
 
-float leftSpringValue; //L where it is
-float newLeftSpringValue; //where it wants to go
+float leftSpringValue=0; //L where it is
+float newLeftSpringValue=0; //where it wants to go
 
-float rightSpringValue; //R where it is
-float newRightSpringValue; //where it wants to go
+float rightSpringValue=0; //R where it is
+float newRightSpringValue=0; //where it wants to go
 
 char activeSpring = -1; //which spring value to set/change
 String activeString; //user inputted wanted value
@@ -145,46 +145,50 @@ float moveSpecificLBSA(float currentSpringValue, float newSpringValue, String cu
 float concurrent_movement_LBSAs() {
   // float deltaArray[] = { newFrontSpringValue - frontSpringValue, newLeftSpringValue - leftSpringValue, newRightSpringValue - rightSpringValue, newRearSpringValue - rearSpringValue};
   //for testing only
-  // float deltaArray[] = { newSpringValues[0] - currentSpringValues[0], newSpringValues[1] - currentSpringValues[1]};
-  float deltaArray[] = { newFrontSpringValue - frontSpringValue, newLeftSpringValue - leftSpringValue};
+  float deltaArray[] = { newSpringValues[0] - currentSpringValues[0], newSpringValues[1] - currentSpringValues[1]};
+  // float deltaArray[] = { newFrontSpringValue - frontSpringValue, newLeftSpringValue - leftSpringValue};
   int arraySize = sizeof(deltaArray)/sizeof(float); //TESTING, CHANGE IT TO
 
   //find distances that need to be traveled
-  float deltaMin = deltaArray[0]; //set up the deltaMin first
-  // Serial.print("Size of deltaArray: ");
-  // Serial.println(sizeof(deltaArray));
-  for(int i=1; i < arraySize; i++) {
+  float deltaMin = 100000; //set up the deltaMin first
+
+  for(int i=0; i < arraySize; i++) {
+    Serial.print("DeltaArray: "); //TESTING
+    Serial.println(deltaArray[i]); //TESTING
     if ( deltaArray[i] != 0 ) {
-      Serial.println("DeltaArray"); //TESTING
-      Serial.println(deltaArray[i]); //TESTING
       deltaMin = min(deltaMin, abs(deltaArray[i]));
-      // Serial.println(deltaMin); //TESTING
+      Serial.print("DeltaMin: "); //TESTING
+      Serial.println(deltaMin); //TESTING
     }
   }
 
   //do pulseDuration math
   numberOfSteps = abs(deltaMin) * stepsToInch;
-
-
-  //determine directions of each LBSA
-  for(int i=0; i < arraySize; i++) {
-    if(deltaArray < 0) {
-      digitalWrite(dirArray[i], LOW);
-    }
-    else {
-      digitalWrite(dirArray[i], HIGH);
-    }
-    digitalWrite(enableArray[i], HIGH); //idk about this yet
-    digitalWrite(pulseArray[i], HIGH);
-  }
-
+  Serial.print("Number Of Steps: ");
+  Serial.println(numberOfSteps);
 
   Serial.println("Running pulses");
   //run the pulse for this number of steps
   for (int i=0; i < numberOfSteps; i++) {
+    for (int i=0; i < arraySize; i++) {
+      if(deltaArray[i] != 0) {
+        if(deltaArray[i] < 0) {
+          digitalWrite(dirArray[i], LOW);
+        }
+        else {
+          digitalWrite(dirArray[i], HIGH);
+        }
+        digitalWrite(enableArray[i], HIGH);
+        digitalWrite(pulseArray[i], HIGH);
+      }
+    }
     delayMicroseconds(pulseDuration);
+    for (int i=0; i < arraySize; i++) {
+      if(deltaArray[i] != 0) {
+        digitalWrite(pulseArray[i], LOW);
+      }
+    }
   }
-
   //turn off all the pins
   for(int i=0; i < arraySize; i++) {
     digitalWrite(pulseArray[i], LOW);
@@ -192,17 +196,15 @@ float concurrent_movement_LBSAs() {
   Serial.println("Finished running pulses"); //TESTING
 
   //do distance updation
-  for(int i=1; i < arraySize; i++) {
+  for(int i=0; i < arraySize; i++) {
     if ( deltaArray[i] > 0 ) {
-      deltaArray[i] = deltaArray[i] - deltaMin;
+      currentSpringValues[i] = currentSpringValues[i] + deltaMin;
     }
     else if ( deltaArray[i] < 0) {
-      deltaArray[i] = deltaArray[i] + deltaMin;
+      currentSpringValues[i] = currentSpringValues[i] - deltaMin;
     }
-  }
-  Serial.println("new Delta values:");
-  for(int i=0; i < arraySize; i++) {
-    Serial.println(deltaArray[i]);
+    Serial.print("new current Position value: "); //visual feedback //add LCD feedback later
+    Serial.println(currentSpringValues[i]);
   }
 
   // //as long as there is a non-zero delta, recursive call
@@ -348,8 +350,6 @@ void loop(){
 
           concurrent_movement_LBSAs();
 
-
-
           digitalWrite(redPin, LOW); //stop actions
 
           break;
@@ -377,19 +377,31 @@ void loop(){
 		        switch(activeSpring){
               case 0:
               lcd.print("Front: ");
-              lcd.print(frontSpringValue,6);
+              lcd.print(currentSpringValues[0],6);
+              lcd.setCursor(0,1);
+              lcd.print("Target: ");
+              lcd.print(newSpringValues[0],6);
               break;
               case 1:
               lcd.print("Left: ");
-              lcd.print(leftSpringValue,6);
+              lcd.print(currentSpringValues[1],6);
+              lcd.setCursor(0,1);
+              lcd.print("Target: ");
+              lcd.print(newSpringValues[1],6);
               break;
               case 2:
               lcd.print("Rear: ");
-              lcd.print(rearSpringValue,6);
+              lcd.print(currentSpringValues[2],6);
+              lcd.setCursor(0,1);
+              lcd.print("Target: ");
+              lcd.print(newSpringValues[2],6);
               break;
               case 3:
               lcd.print("Right: ");
-              lcd.print(rightSpringValue,6);
+              lcd.print(currentSpringValues[3],6);
+              lcd.setCursor(0,1);
+              lcd.print("Target: ");
+              lcd.print(newSpringValues[3],6);
               break;
             }
           break;
@@ -403,33 +415,37 @@ void loop(){
 	        //Note: this is "ST/REPT" button
           case stReptLBSAScrollButton: //set the new value for the activeSpring
             // lcd.setCursor(0,0); //first column, first row
-  		  // lcd.print(activeSpring); //prints what spring it is writing to
+  		      // lcd.print(activeSpring); //prints what spring it is writing to
             // lcd.setCursor(0,1); //set cursor to second row
 
             boolean completion = true;
             switch(activeSpring) {
               case 0: //front
-              newFrontSpringValue = activeString.toFloat();
+              // newFrontSpringValue = activeString.toFloat();
+              newSpringValues[0] = activeString.toFloat();
               lcd.print("Front set: ");
-  			      lcd.print(newFrontSpringValue,6);
+  			      lcd.print(newSpringValues[0],6);
               break;
 
               case 1: //left
-              newLeftSpringValue = activeString.toFloat();
+              // newLeftSpringValue = activeString.toFloat();
+              newSpringValues[1] = activeString.toFloat();
               lcd.print("Left set: ");
-  			      lcd.print(newLeftSpringValue,6);
+  			      lcd.print(newSpringValues[1],6);
               break;
 
               case 2: //rear
-              newRearSpringValue = activeString.toFloat();
+              // newRearSpringValue = activeString.toFloat();
+              newSpringValues[2] = activeString.toFloat();
               lcd.print("Rear set: ");
-  			      lcd.print(newRearSpringValue,6);
+  			      lcd.print(newSpringValues[2],6);
               break;
 
               case 3: //right
-              newRightSpringValue = activeString.toFloat();
+              // newRightSpringValue = activeString.toFloat();
+              newSpringValues[3] = activeString.toFloat();
               lcd.print("Right set: ");
-  			      lcd.print(newRightSpringValue,6);
+  			      lcd.print(newSpringValues[3],6);
               break;
 
               default:
