@@ -12,44 +12,23 @@ LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //initializing used pins
 const int RECV_PIN = 8; //initializing pin used for IR
 const int redPin = 10; //for LED data passthroughs
 const int greenPin = 9; //for LED data passthroughs
-//for LBSA-1 output control
-const int ENABLE1 =11; //Pulse pin on the board
-const int DIR1 = 12; //Direction pin on the board
-const int PULSE1 = 13; //Enable pin on the board
-//for LBSA-2 output control
-const int ENABLE2 = 14; //Pulse pin on the board
-const int DIR2 = 15; //Direction pin on the board
-const int PULSE2 = 16; //Enable pin on the board
-// //for LBSA-1 state control
-// int ENABLE1STATE = 1;
-// int DIR1STATE = 1;
-// int PULSE1STATE = 1;
 
+char *lbsaArray[] = {"front","left","rear","right"};
+
+int enableArray[] = {11,14}; //front,left,rear,right
+int dirArray[] = {12,15}; //front,left,rear,right
+int pulseArray[] = {13,16}; //front,left,rear,right
 
 //GLOBAL VARIABLE DECLARATIONS_________________________________
 IRrecv irrecv(RECV_PIN); //initialize the IR receiver object
 decode_results results; //results from IR sensors but wtf type is this
 
 unsigned long key_value = 0; //current/previous hex value
-
 int stepsToInch = 4050; //current arbitrary value for calculating inches to steps
-
 float numberOfSteps = 1600; //some arbitrary value/related to Microsteps and LBSAs
-
 int pulseDuration = 200;
-
-// float stepDiff = 0;
-
-
-//spring values and activeSpring, and user input activeString
-float frontSpringValue; //F where it is
-float newFrontSpringValue; //where it wants to go
-float rearSpringValue; //B where it is
-float newRearSpringValue; //where it wants to go
-float leftSpringValue; //L where it is
-float newLeftSpringValue; //where it wants to go
-float rightSpringValue; //R where it is
-float newRightSpringValue; //where it wants to go
+float currentSpringValues[] = {0,0,0,0}; //front,left,rear,right
+float newSpringValues[] = {0,0,0,0}; //front,left,rear,right
 char activeSpring = -1; //which spring value to set/change
 String activeString; //user inputted wanted value
 
@@ -90,14 +69,24 @@ void setup(){
   pinMode(greenPin, OUTPUT);
 
   //LBSA1 pinMode declaration
-  pinMode(ENABLE1, OUTPUT);
-  pinMode(DIR1, OUTPUT);
-  pinMode(PULSE1, OUTPUT);
+  pinMode(enableArray[0], OUTPUT);
+  pinMode(dirArray[0], OUTPUT);
+  pinMode(pulseArray[0], OUTPUT);
 
   //LBSA2 pinMode declaration
-  pinMode(ENABLE2, OUTPUT);
-  pinMode(DIR2, OUTPUT);
-  pinMode(PULSE2, OUTPUT);
+  pinMode(enableArray[1], OUTPUT);
+  pinMode(dirArray[1], OUTPUT);
+  pinMode(pulseArray[1], OUTPUT);
+
+  // //LBSA3 pinMode declaration
+  // pinMode(enableArray[2], OUTPUT);
+  // pinMode(dirArray[2], OUTPUT);
+  // pinMode(pulseArray[2], OUTPUT);
+
+  // //LBSA4 pinMode declaration
+  // pinMode(enableArray[3], OUTPUT);
+  // pinMode(dirArray[3], OUTPUT);
+  // pinMode(pulseArray[3], OUTPUT);
 }
 
 //takes in cur spring val and new spring val, cur spring, and it's 3 pinNums //TODO ISSUE WITH ROUNDING
@@ -124,6 +113,78 @@ float moveSpecificLBSA(float currentSpringValue, float newSpringValue, String cu
     delayMicroseconds(pulseDuration);
   }
   return newSpringValue;
+}
+
+float concurrent_movement_LBSAs() {
+  // float deltaArray[] = { newFrontSpringValue - frontSpringValue, newLeftSpringValue - leftSpringValue, newRightSpringValue - rightSpringValue, newRearSpringValue - rearSpringValue};
+  float deltaArray[] = { newSpringValues[0] - currentSpringValues[0], newSpringValues[1] - currentSpringValues[1]};
+  int arraySize = sizeof(deltaArray)/sizeof(float); //TESTING, CHANGE IT TO
+
+  //find distances that need to be traveled
+  float deltaMin = 100000; //set up the deltaMin first
+
+  for(int i=0; i < arraySize; i++) {
+    Serial.print("DeltaArray: "); //TESTING
+    Serial.println(deltaArray[i]); //TESTING
+    if ( deltaArray[i] != 0 ) {
+      deltaMin = min(deltaMin, abs(deltaArray[i]));
+      Serial.print("DeltaMin: "); //TESTING
+      Serial.println(deltaMin); //TESTING
+    }
+  }
+
+  //do pulseDuration math
+  numberOfSteps = abs(deltaMin) * stepsToInch;
+  Serial.print("Number Of Steps: "); //TESTING
+  Serial.println(numberOfSteps); //TESTING
+
+  //run the pulse for this number of steps
+  for (int i=0; i < numberOfSteps; i++) {
+    for (int i=0; i < arraySize; i++) {
+      if(deltaArray[i] != 0) {
+        if(deltaArray[i] < 0) {
+          digitalWrite(dirArray[i], LOW);
+        }
+        else {
+          digitalWrite(dirArray[i], HIGH);
+        }
+        digitalWrite(enableArray[i], HIGH);
+        digitalWrite(pulseArray[i], HIGH);
+      }
+    }
+    delayMicroseconds(pulseDuration);
+    for (int i=0; i < arraySize; i++) {
+      if(deltaArray[i] != 0) {
+        digitalWrite(pulseArray[i], LOW);
+      }
+    }
+  }
+  //turn off all the pins
+  for(int i=0; i < arraySize; i++) {
+    digitalWrite(pulseArray[i], LOW);
+  }
+
+  //do distance updation
+  for(int i=0; i < arraySize; i++) {
+    if ( deltaArray[i] > 0 ) {
+      currentSpringValues[i] = currentSpringValues[i] + deltaMin;
+    }
+    else if ( deltaArray[i] < 0) {
+      currentSpringValues[i] = currentSpringValues[i] - deltaMin;
+    }
+    Serial.print("new current Position value: "); //visual feedback //add LCD feedback later
+    Serial.println(currentSpringValues[i]);
+  }
+
+  // //as long as there is a non-zero delta, recursive call
+  // //can probably put this in the calling function?
+  // for(int i=1; i < arraySize; i++) {
+  //   if ( deltaArray[i] != 0 ) {
+  //     concurrent_movement_LBSAs();
+  //     break;
+  //   }
+  // }
+
 }
 
 
@@ -237,46 +298,27 @@ void loop(){
           //calculates direction and stepDifference for the front Spring
           //FRONT LBSA1
           case volumeDownButton:
-            frontSpringValue = moveSpecificLBSA(frontSpringValue,newFrontSpringValue, "Front", DIR1, ENABLE1, PULSE1);
+            currentSpringValues[0] = moveSpecificLBSA(currentSpringValues[0], newSpringValues[0], lbsaArray[0], dirArray[0], enableArray[0], pulseArray[0]);
           break;
 
 		      //Next Button
           //Direction LOW
           //LEFT LBSA2
           case nextButton:
-            leftSpringValue = moveSpecificLBSA(leftSpringValue,newLeftSpringValue, "Left", DIR2, ENABLE2, PULSE2);
+            currentSpringValues[1] = moveSpecificLBSA(currentSpringValues[1], newSpringValues[1], lbsaArray[1], dirArray[1], enableArray[1], pulseArray[1]);
           break;
 
           //Previous Button
           case backButton:
-          // lcd.print("DOWN: DIR1 LOW");
           break;
 
           case playStopButton:
           lcd.print("Play/Stop"); //execute movements/calculations
-          digitalWrite(redPin, HIGH); //stop actions
+          digitalWrite(redPin, HIGH); //start actions
 
-          for(int i = 0; i < numberOfSteps; i++) {
-            digitalWrite(DIR1, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-            digitalWrite(ENABLE1, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
+          concurrent_movement_LBSAs();
 
-            digitalWrite(DIR2, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-            digitalWrite(ENABLE2, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
-
-            digitalWrite(PULSE1, HIGH); //activates pulse
-            digitalWrite(PULSE2, HIGH); //activates pulse
-
-            delayMicroseconds(pulseDuration);
-
-            digitalWrite(PULSE1, LOW); //turns off the pulse
-            digitalWrite(PULSE2, LOW); //turns off the pulse
-
-            delayMicroseconds(pulseDuration);
-          }
-
-
-          digitalWrite(redPin, LOW); //start actions
-
+          digitalWrite(redPin, LOW); //stop actions
           break;
 
           case upButton: //linear actuators up
@@ -287,7 +329,7 @@ void loop(){
           // lcd.print("DOWN: DIR2 HIGH");
           break;
 
-		  //NOTE: Power Button
+	        //NOTE: Power Button
           case powerButton:
             activeString="";
       		  lcd.setCursor(0,0); //first column, first row
@@ -297,24 +339,36 @@ void loop(){
       		  lcd.print("<");
           break;
 
-		  //Func/Stop button
+	        //Func/Stop button
           case funcStopButton:
 		        switch(activeSpring){
               case 0:
               lcd.print("Front: ");
-              lcd.print(frontSpringValue,6);
+              lcd.print(currentSpringValues[0],6);
+              lcd.setCursor(0,1);
+              lcd.print("Target: ");
+              lcd.print(newSpringValues[0],6);
               break;
               case 1:
               lcd.print("Left: ");
-              lcd.print(leftSpringValue,6);
+              lcd.print(currentSpringValues[1],6);
+              lcd.setCursor(0,1);
+              lcd.print("Target: ");
+              lcd.print(newSpringValues[1],6);
               break;
               case 2:
               lcd.print("Rear: ");
-              lcd.print(rearSpringValue,6);
+              lcd.print(currentSpringValues[2],6);
+              lcd.setCursor(0,1);
+              lcd.print("Target: ");
+              lcd.print(newSpringValues[2],6);
               break;
               case 3:
               lcd.print("Right: ");
-              lcd.print(rightSpringValue,6);
+              lcd.print(currentSpringValues[3],6);
+              lcd.setCursor(0,1);
+              lcd.print("Target: ");
+              lcd.print(newSpringValues[3],6);
               break;
             }
           break;
@@ -325,55 +379,55 @@ void loop(){
           lcd.print(activeString);
           break;
 
-		  //Note: this is "ST/REPT" button
+	        //Note: this is "ST/REPT" button
           case stReptLBSAScrollButton: //set the new value for the activeSpring
-          // lcd.setCursor(0,0); //first column, first row
-		  // lcd.print(activeSpring); //prints what spring it is writing to
-          // lcd.setCursor(0,1); //set cursor to second row
+            // lcd.setCursor(0,0); //first column, first row
+  		      // lcd.print(activeSpring); //prints what spring it is writing to
+            // lcd.setCursor(0,1); //set cursor to second row
 
-          boolean completion = true;
-          switch(activeSpring) {
-            case 0: //front
-            newFrontSpringValue = activeString.toFloat();
-            lcd.print("Front set: ");
-			      lcd.print(newFrontSpringValue,6);
-            break;
+            boolean completion = true;
+            switch(activeSpring) {
+              case 0: //front
+              newSpringValues[0] = activeString.toFloat();
+              lcd.print("Front set: ");
+  			      lcd.print(newSpringValues[0],6);
+              break;
 
-            case 1: //left
-            newLeftSpringValue = activeString.toFloat();
-            lcd.print("Left set: ");
-			      lcd.print(newLeftSpringValue,6);
-            break;
+              case 1: //left
+              newSpringValues[1] = activeString.toFloat();
+              lcd.print("Left set: ");
+  			      lcd.print(newSpringValues[1],6);
+              break;
 
-            case 2: //rear
-            newRearSpringValue = activeString.toFloat();
-            lcd.print("Rear set: ");
-			      lcd.print(newRearSpringValue,6);
-            break;
+              case 2: //rear
+              newSpringValues[2] = activeString.toFloat();
+              lcd.print("Rear set: ");
+  			      lcd.print(newSpringValues[2],6);
+              break;
 
-            case 3: //right
-            newRightSpringValue = activeString.toFloat();
-            lcd.print("Right set: ");
-			      lcd.print(newRightSpringValue,6);
-            break;
+              case 3: //right
+              newSpringValues[3] = activeString.toFloat();
+              lcd.print("Right set: ");
+  			      lcd.print(newSpringValues[3],6);
+              break;
 
-            default:
-            completion = false;
-          } //end switchFindActiveSpring
+              default:
+              completion = false;
+            } //end switchFindActiveSpring
 
-          if(completion) { //error handling?? lmao
-            activeString = "";
-            activeSpring = -1; //TODO do we want set the activeSpring to "null" after making a set
+            if(completion) { //error handling?? lmao
+              activeString = "";
+              activeSpring = -1; //TODO do we want set the activeSpring to "null" after making a set
 
-            digitalWrite(greenPin, HIGH); //blink greenLED to confirm set
-            delay(500);
-            digitalWrite(greenPin, LOW);
-          }
-		  else {
-			digitalWrite(redPin, HIGH); //blinks redLED failure!
+              digitalWrite(greenPin, HIGH); //blink greenLED to confirm set
+              delay(500);
+              digitalWrite(greenPin, LOW);
+            }
+      		  else {
+      			digitalWrite(redPin, HIGH); //blinks redLED failure!
             delay(500);
             digitalWrite(redPin, LOW);
-		  }
+      		  }
           break;
         } //end switchRemote
 
