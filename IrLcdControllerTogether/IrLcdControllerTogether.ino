@@ -57,6 +57,26 @@ const unsigned long eqDecimalButton = 0xFF9867;
 const unsigned long stReptLBSAScrollButton = 0xFFB04F;
 
 
+const unsigned long powerButton = 45BA38C7; //sat
+const unsigned long inputButton = 45BA52AD; //sat
+const unsigned long okButton = FFC936; //blu-ray
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+
+
 void setup(){
   Serial.begin(9600); //I believe this begins the Serial Monitor?
   irrecv.enableIRIn(); //I think this enables the IR sensor input ability?
@@ -434,6 +454,6 @@ void loop(){
         if(results.value != 0XFFFFFFFF) { //TODO: wtf does this do?
           key_value = results.value;
         }
-        irrecv.resume();
+  irrecv.resume();
   }
 }

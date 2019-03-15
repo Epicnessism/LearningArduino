@@ -1,6 +1,6 @@
 #include <IRremote.h>
 
-const int RECV_PIN = 7;
+const int RECV_PIN = 11;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 unsigned long key_value = 0;
@@ -31,22 +31,22 @@ void loop(){
           break;
           case 0xFF7A85:
           Serial.println("3");
-          break ;  
+          break ;
           case 0xFF10EF:
           Serial.println("4");
-          break ;               
+          break ;
           case 0xFF38C7:
           Serial.println("5");
-          break ;  
+          break ;
           case 0xFF5AA5:
           Serial.println("6");
-          break ;  
+          break ;
           case 0xFF42BD:
           Serial.println("7");
-          break ;  
+          break ;
           case 0xFF4AB5:
           Serial.println("8");
-          break ;  
+          break ;
           case 0xFF52AD:
           Serial.println("9");
           break ;
@@ -79,13 +79,12 @@ void loop(){
           break ;
           case 0xFF9867:
           Serial.println("EQ");
-          break ;      
+          break ;
           case 0xFFB04F:
           Serial.println("St/Rept");
           break ;
         }
         key_value = results.value;
-        irrecv.resume(); 
+        irrecv.resume();
   }
 }
-
