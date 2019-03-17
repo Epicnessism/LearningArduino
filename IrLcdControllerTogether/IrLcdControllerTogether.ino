@@ -35,10 +35,10 @@ String activeString; //user inputted wanted value
 
 //IR HEX VALUES TO VARIABLES
 const unsigned long zeroButton = 0xFF6897;
-const unsigned long oneButton = 0xFF30CF;
-const unsigned long twoButton = 0xFF18E7;
-const unsigned long threeButton = 0xFF7A85;
-const unsigned long fourButton = 0xFF10EF;
+// const unsigned long oneButton = 0xFF30CF;
+// const unsigned long twoButton = 0xFF18E7;
+// const unsigned long threeButton = 0xFF7A85;
+// const unsigned long fourButton = 0xFF10EF;
 const unsigned long fiveButton = 0xFF38C7;
 const unsigned long sixButton = 0xFF5AA5;
 const unsigned long sevenButton = 0xFF42BD;
@@ -57,16 +57,18 @@ const unsigned long eqDecimalButton = 0xFF9867;
 const unsigned long stReptLBSAScrollButton = 0xFFB04F;
 
 
-const unsigned long powerButton = 45BA38C7; //sat
-const unsigned long inputButton = 45BA52AD; //sat
-const unsigned long okButton = FFC936; //blu-ray
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
+// const unsigned long powerButton = 0xFFA35C; //blu-ray
+// const unsigned long powerButton = 0x45BA38C7; //sat
+// const unsigned long inputButton = 45BA52AD; //sat
+// const unsigned long okButton = 0xFFC936; //blu-ray
+// const unsigned long okButton = 45BA7A85; //sat
+// const unsigned long rightButton = FF4BB4; //blu-ray
+// const unsigned long rightButton = 45BAB847; //sat
+// const unsigned long homeButton = FFCB34; //blu-ray
+const unsigned long oneButton = 0xFF817E; //blu-ray
+const unsigned long twoButton = 0xFFC13E; //blu-ray
+const unsigned long threeButton = 0x45BAC03F; //sat
+const unsigned long fourButton = 0x45BA20DF; //sat
 // const unsigned long
 // const unsigned long
 // const unsigned long
