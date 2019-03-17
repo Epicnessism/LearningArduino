@@ -9,8 +9,8 @@
 
 //PIN DECLARATIONS______________________________________________
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //initializing used pins
-const int RECV_PIN = 8; //initializing pin used for IR
-const int redPin = 10; //for LED data passthroughs
+const int RECV_PIN = 10; //initializing pin used for IR
+const int redPin = 8; //for LED data passthroughs
 const int greenPin = 9; //for LED data passthroughs
 
 char *lbsaArray[] = {"front","left","rear","right"};
