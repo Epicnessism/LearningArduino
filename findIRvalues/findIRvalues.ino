@@ -1,6 +1,6 @@
 #include <IRremote.h>
 
-const int RECV_PIN = 0;
+const int RECV_PIN = 10;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 unsigned long key_value = 0;

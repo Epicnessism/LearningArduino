@@ -34,49 +34,48 @@ String activeString; //user inputted wanted value
 
 
 //IR HEX VALUES TO VARIABLES
-const unsigned long zeroButton = 0xFF6897;
+// const unsigned long zeroButton = 0xFF6897;
 // const unsigned long oneButton = 0xFF30CF;
 // const unsigned long twoButton = 0xFF18E7;
 // const unsigned long threeButton = 0xFF7A85;
 // const unsigned long fourButton = 0xFF10EF;
-const unsigned long fiveButton = 0xFF38C7;
-const unsigned long sixButton = 0xFF5AA5;
-const unsigned long sevenButton = 0xFF42BD;
-const unsigned long eightButton = 0xFF4AB5;
-const unsigned long nineButton = 0xFF52AD;
+// const unsigned long fiveButton = 0xFF38C7;
+// const unsigned long sixButton = 0xFF5AA5;
+// const unsigned long sevenButton = 0xFF42BD;
+// const unsigned long eightButton = 0xFF4AB5;
+// const unsigned long nineButton = 0xFF52AD;
 const unsigned long volumeUpButton = 0xFF629D;
 const unsigned long volumeDownButton = 0xFFA857;
 const unsigned long nextButton = 0xFFC23D;
 const unsigned long backButton = 0xFF22DD;
 const unsigned long playStopButton = 0xFF02FD;
-const unsigned long upButton = 0xFF906F;
-const unsigned long downButton = 0xFFE01F;
-const unsigned long powerButton = 0xFFA25D;
+const unsigned long upButton = 0xFF906F; //frontButton
+const unsigned long downButton = 0xFFE01F; //rearButton
+// const unsigned long powerButton = 0xFFA25D;
 const unsigned long funcStopButton = 0xFFE21D;
 const unsigned long eqDecimalButton = 0xFF9867;
 const unsigned long stReptLBSAScrollButton = 0xFFB04F;
 
-
-// const unsigned long powerButton = 0xFFA35C; //blu-ray
-// const unsigned long powerButton = 0x45BA38C7; //sat
-// const unsigned long inputButton = 45BA52AD; //sat
-// const unsigned long okButton = 0xFFC936; //blu-ray
-// const unsigned long okButton = 45BA7A85; //sat
-// const unsigned long rightButton = FF4BB4; //blu-ray
-// const unsigned long rightButton = 45BAB847; //sat
-// const unsigned long homeButton = FFCB34; //blu-ray
-const unsigned long oneButton = 0xFF817E; //blu-ray
-const unsigned long twoButton = 0xFFC13E; //blu-ray
-const unsigned long threeButton = 0x45BAC03F; //sat
-const unsigned long fourButton = 0x45BA20DF; //sat
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
+const unsigned long powerButton = 0x595E13FA; //dvd
+const unsigned long menuButton = 0xFBCEF2FA; //dvd
+const unsigned long okButton = 0x7404BC5A; //dvd
+const unsigned long leftButton = 0x343DF5DE; //dvd
+const unsigned long rightButton = 0xDFAA9A1F; //dvd
+const unsigned long frontButton = 0xFF2F577B; //dvd
+const unsigned long rearButton = 0x9BD466C2; //dvd
+const unsigned long homeButton = 0xAE89EB62; //dvd
+const unsigned long zeroButton = 0x7885BE56; //dvd
+const unsigned long oneButton = 0x4C0F819F; //dvd
+const unsigned long twoButton = 0x53A4A1A2; //dvd
+const unsigned long threeButton = 0xFF1145E3; //dvd
+const unsigned long fourButton = 0x25507BFA; //dvd
+const unsigned long fiveButton = 0xA9052DBB; //dvd
+const unsigned long sixButton = 0x2B0E02BE //dvd;
+const unsigned long sevenButton = 0xD67AA6FF; //dvd
+const unsigned long eightButton = 0xE7F5ED5A; //dvd
+const unsigned long nineButton = 0xA772439B; //dvd
+const unsigned long enterButton = 0x7404BC5A; //dvd
+const unsigned long decimalButton = 0xF708557B; //dvd
 
 
 void setup(){
