@@ -71,7 +71,7 @@ const unsigned long twoButton = 0x53A4A1A2; //dvd
 const unsigned long threeButton = 0xFF1145E3; //dvd
 const unsigned long fourButton = 0x25507BFA; //dvd
 const unsigned long fiveButton = 0xA9052DBB; //dvd
-const unsigned long sixButton = 0x2B0E02BE //dvd;
+const unsigned long sixButton = 0x2B0E02BE; //dvd;
 const unsigned long sevenButton = 0xD67AA6FF; //dvd
 const unsigned long eightButton = 0xE7F5ED5A; //dvd
 const unsigned long nineButton = 0xA772439B; //dvd
@@ -116,9 +116,21 @@ void setup(){
   // pinMode(pulseArray[3], OUTPUT);
 }
 
-//resets the all the lbsa
+//resets all the lbsa
 float reset_LBSAs() {
-
+  // newSpringValues = {0,0,0,0} //front,left,rear,right //sets everything to 0
+  int arraySize = sizeof(newSpringValues)/sizeof(float);
+  for (int i = 0; i < arraySize; i++) {
+    newSpringValues[i] = 0;
+  }
+  // float x = concurrent_movement_LBSAs();
+  //as long as there is a non-zero delta, recursive call
+  //can probably put this in the calling function?
+  for(int i = 0; i < arraySize; i++) {
+    if ( currentSpringValues[i] != 0 ) {
+      concurrent_movement_LBSAs();
+    }
+  }
 }
 
 //takes in cur spring val and new spring val, cur spring, and it's 3 pinNums //TODO ISSUE WITH ROUNDING
@@ -129,7 +141,6 @@ float moveSpecificLBSA( float currentSpringValue,
                         int enable,
                         int pulse) {
   lcd.print("Was:" + String(currentSpringValue) + " To:" + String(newSpringValue));
-
   //doing math conversion from inches to steps
   Serial.println("new " + currentSpring + " is: " + String(newSpringValue));
   Serial.println("current " + currentSpring + " is: " + String(currentSpringValue));
@@ -173,7 +184,10 @@ float concurrent_movement_LBSAs() {
       Serial.println(deltaMin); //TESTING
     }
   }
+  return move_LBSAs(deltaMin, deltaArray, arraySize);
+}
 
+float move_LBSAs (float deltaMin, float deltaArray[], int arraySize) {
   //do pulseDuration math
   numberOfSteps = abs(deltaMin) * stepsToInch; //convert deltaMin inches to steps
   Serial.print("Number Of Steps: "); //TESTING
@@ -231,7 +245,6 @@ float concurrent_movement_LBSAs() {
   //     break;
   //   }
   // }
-
 }
 
 
