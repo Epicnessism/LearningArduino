@@ -56,7 +56,9 @@ const unsigned long funcStopButton = 0xFFE21D;
 // const unsigned long decimalButton = 0xFF9867;
 const unsigned long stReptLBSAScrollButton = 0xFFB04F;
 
+
 //IR values for black remote in dvd protocol
+//function buttons
 const unsigned long powerButton = 0x595E13FA; //dvd
 const unsigned long menuButton = 0xFBCEF2FA; //dvd
 const unsigned long okButton = 0x7404BC5A; //dvd
@@ -65,6 +67,8 @@ const unsigned long rightButton = 0xDFAA9A1F; //dvd
 const unsigned long frontButton = 0xFF2F577B; //dvd
 const unsigned long rearButton = 0x9BD466C2; //dvd
 const unsigned long homeButton = 0xAE89EB62; //dvd
+const unsigned long enterButton = 0x7404BC5A; //dvd
+//number buttons
 const unsigned long zeroButton = 0x7885BE56; //dvd
 const unsigned long oneButton = 0x4C0F819F; //dvd
 const unsigned long twoButton = 0x53A4A1A2; //dvd
@@ -75,7 +79,6 @@ const unsigned long sixButton = 0x2B0E02BE; //dvd;
 const unsigned long sevenButton = 0xD67AA6FF; //dvd
 const unsigned long eightButton = 0xE7F5ED5A; //dvd
 const unsigned long nineButton = 0xA772439B; //dvd
-const unsigned long enterButton = 0x7404BC5A; //dvd
 const unsigned long decimalButton = 0xF708557B; //dvd
 // const unsigned long
 // const unsigned long
@@ -348,11 +351,10 @@ void loop(){
           break;
 
           case volumeUpButton:
-          lcd.print("Vol+"); //TODO NEED A DIFF KEY FOR THIS
-          //set pulseDuration i to active value
-          pulseDuration = activeString.toFloat();
-          activeString="";
-
+            lcd.print("Vol+"); //TODO NEED A DIFF KEY FOR THIS
+            //set pulseDuration i to active value
+            pulseDuration = activeString.toFloat();
+            activeString="";
           break;
 
           //calculates direction and stepDifference for the front Spring
@@ -375,9 +377,7 @@ void loop(){
           case playStopButton:
           lcd.print("Play/Stop"); //execute movements/calculations
           digitalWrite(redPin, HIGH); //start actions
-
           concurrent_movement_LBSAs();
-
           digitalWrite(redPin, LOW); //stop actions
           break;
 
@@ -390,13 +390,14 @@ void loop(){
           break;
 
 	        //NOTE: Power Button
-          case powerButton:
-            activeString="";
-      		  lcd.setCursor(0,0); //first column, first row
-      		  lcd.print("Nothing before <");
-      		  lcd.setCursor(0,1); //first column, second row
-      		  lcd.print(activeString); //does a printcheck, if printed something is wrong
-      		  lcd.print("<");
+          case powerButton: //ie set to zero before turning off
+            reset_LBSAs();
+            // activeString="";
+      		  // lcd.setCursor(0,0); //first column, first row
+      		  // lcd.print("Nothing before <");
+      		  // lcd.setCursor(0,1); //first column, second row
+      		  // lcd.print(activeString); //does a printcheck, if printed something is wrong
+      		  // lcd.print("<");
           break;
 
 	        //Func/Stop button
