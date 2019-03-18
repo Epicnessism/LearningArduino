@@ -33,7 +33,7 @@ char activeSpring = -1; //which spring value to set/change
 String activeString; //user inputted wanted value
 
 
-//IR HEX VALUES TO VARIABLES
+//IR values for small remote in unknown protocol
 // const unsigned long zeroButton = 0xFF6897;
 // const unsigned long oneButton = 0xFF30CF;
 // const unsigned long twoButton = 0xFF18E7;
@@ -53,9 +53,10 @@ const unsigned long upButton = 0xFF906F; //frontButton
 const unsigned long downButton = 0xFFE01F; //rearButton
 // const unsigned long powerButton = 0xFFA25D;
 const unsigned long funcStopButton = 0xFFE21D;
-const unsigned long eqDecimalButton = 0xFF9867;
+// const unsigned long decimalButton = 0xFF9867;
 const unsigned long stReptLBSAScrollButton = 0xFFB04F;
 
+//IR values for black remote in dvd protocol
 const unsigned long powerButton = 0x595E13FA; //dvd
 const unsigned long menuButton = 0xFBCEF2FA; //dvd
 const unsigned long okButton = 0x7404BC5A; //dvd
@@ -76,7 +77,12 @@ const unsigned long eightButton = 0xE7F5ED5A; //dvd
 const unsigned long nineButton = 0xA772439B; //dvd
 const unsigned long enterButton = 0x7404BC5A; //dvd
 const unsigned long decimalButton = 0xF708557B; //dvd
-
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
+// const unsigned long
 
 void setup(){
   Serial.begin(9600); //I believe this begins the Serial Monitor?
@@ -110,8 +116,18 @@ void setup(){
   // pinMode(pulseArray[3], OUTPUT);
 }
 
+//resets the all the lbsa
+float reset_LBSAs() {
+
+}
+
 //takes in cur spring val and new spring val, cur spring, and it's 3 pinNums //TODO ISSUE WITH ROUNDING
-float moveSpecificLBSA(float currentSpringValue, float newSpringValue, String currentSpring, int dir, int enable, int pulse) {
+float moveSpecificLBSA( float currentSpringValue,
+                        float newSpringValue,
+                        String currentSpring,
+                        int dir,
+                        int enable,
+                        int pulse) {
   lcd.print("Was:" + String(currentSpringValue) + " To:" + String(newSpringValue));
 
   //doing math conversion from inches to steps
@@ -137,13 +153,17 @@ float moveSpecificLBSA(float currentSpringValue, float newSpringValue, String cu
 }
 
 float concurrent_movement_LBSAs() {
-  // float deltaArray[] = { newFrontSpringValue - frontSpringValue, newLeftSpringValue - leftSpringValue, newRightSpringValue - rightSpringValue, newRearSpringValue - rearSpringValue};
-  float deltaArray[] = { newSpringValues[0] - currentSpringValues[0], newSpringValues[1] - currentSpringValues[1]};
+  // float deltaArray[] = {newSpringValues[0] - currentSpringValues[0],
+  //                       newSpringValues[1] - currentSpringValues[1],
+  //                       newSpringValues[2] - currentSpringValues[2],
+  //                       newSpringValues[3] - currentSpringValues[3]};
+  float deltaArray[] = {newSpringValues[0] - currentSpringValues[0],
+                        newSpringValues[1] - currentSpringValues[1]};
   int arraySize = sizeof(deltaArray)/sizeof(float); //TESTING, CHANGE IT TO
+  float deltaMin = 100000; //set up the deltaMin first //this is some arbitrarily high value
 
-  //find distances that need to be traveled
-  float deltaMin = 100000; //set up the deltaMin first
-
+  //for however big deltaArray is, loop through and find the smallest delta
+  //set that as the new deltaMin
   for(int i=0; i < arraySize; i++) {
     Serial.print("DeltaArray: "); //TESTING
     Serial.println(deltaArray[i]); //TESTING
@@ -155,28 +175,34 @@ float concurrent_movement_LBSAs() {
   }
 
   //do pulseDuration math
-  numberOfSteps = abs(deltaMin) * stepsToInch;
+  numberOfSteps = abs(deltaMin) * stepsToInch; //convert deltaMin inches to steps
   Serial.print("Number Of Steps: "); //TESTING
   Serial.println(numberOfSteps); //TESTING
 
   //run the pulse for this number of steps
   for (int i=0; i < numberOfSteps; i++) {
-    for (int i=0; i < arraySize; i++) {
-      if(deltaArray[i] != 0) {
-        if(deltaArray[i] < 0) {
-          digitalWrite(dirArray[i], LOW);
+    for (int i=0; i < arraySize; i++) { //inner forloop activates all the lbsas prior to stepping
+      if(deltaArray[i] != 0) { //dont activate lbsa if there is no delta
+        if(deltaArray[i] < 0) { //checeks direction lbsa needs to move
+          digitalWrite(dirArray[i], LOW); //low is [ ]
         }
         else {
-          digitalWrite(dirArray[i], HIGH);
+          digitalWrite(dirArray[i], HIGH); //high is [ ]
         }
-        digitalWrite(enableArray[i], HIGH);
+        digitalWrite(enableArray[i], HIGH); //this magical thing...
+        //sets the pulse to high...assumedly it goes fast enough that it doesn't matter
         digitalWrite(pulseArray[i], HIGH);
       }
     }
-    delayMicroseconds(pulseDuration);
+    // for (int i=0; i < arraySize; i++) {
+    //   if(deltaArray[i] != 0) {
+    //     digitalWrite(pulseArray[i], HIGH); //turns the lbsa off
+    //   }
+    // }
+    delayMicroseconds(pulseDuration); //the pulse
     for (int i=0; i < arraySize; i++) {
       if(deltaArray[i] != 0) {
-        digitalWrite(pulseArray[i], LOW);
+        digitalWrite(pulseArray[i], LOW); //turns the lbsa off
       }
     }
   }
@@ -395,7 +421,7 @@ void loop(){
           break;
 
           //Note: this is "EQ" button
-          case eqDecimalButton:
+          case decimalButton:
           activeString += ".";
           lcd.print(activeString);
           break;
