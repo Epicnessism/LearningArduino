@@ -23,6 +23,10 @@ int pulseArray[] = {13,16}; //front,left,rear,right
 IRrecv irrecv(RECV_PIN); //initialize the IR receiver object
 decode_results results; //results from IR sensors but wtf type is this
 
+//OPTIMAL SETTINGS:
+//PULSEDURATION: 200 MS
+//
+
 unsigned long key_value = 0; //current/previous hex value
 int stepsToInch = 4050; //current arbitrary value for calculating inches to steps
 float numberOfSteps = 1600; //some arbitrary value/related to Microsteps and LBSAs
