@@ -30,7 +30,8 @@ decode_results results; //results from IR sensors but wtf type is this
 
 //OPTIMAL SETTINGS:
 //PULSEDURATION: 200 MS
-//
+//1600 Microsteps
+//TODO
 
 unsigned long key_value = 0; //current/previous hex value
 int stepsToInch = 4050; //current arbitrary value for calculating inches to steps
@@ -203,7 +204,7 @@ float concurrent_movement_LBSAs() {
 
 void computeDeltaArray() {
   for (int i=0; i < sizeof(deltaArray)/sizeof(float); i++) {
-    deltaArray[i] = newSpringValues[i] - currentSpringValues[i]
+    deltaArray[i] = newSpringValues[i] - currentSpringValues[i];
   }
 }
 
