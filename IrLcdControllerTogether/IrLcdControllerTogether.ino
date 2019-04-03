@@ -31,6 +31,7 @@ decode_results results; //results from IR sensors but wtf type is this
 //OPTIMAL SETTINGS:
 //PULSEDURATION: 200 MS
 //1600 Microsteps
+//guesstimated stepstoInche = 4050
 //TODO
 
 unsigned long key_value = 0; //current/previous hex value
@@ -59,24 +60,24 @@ const unsigned long volumeUpButton = 0xFF629D;
 const unsigned long volumeDownButton = 0xFFA857;
 const unsigned long nextButton = 0xFFC23D;
 const unsigned long backButton = 0xFF22DD;
-const unsigned long playStopButton = 0xFF02FD;
+// const unsigned long playStopButton = 0xFF02FD;
 const unsigned long upButton = 0xFF906F; //frontButton
 const unsigned long downButton = 0xFFE01F; //rearButton
 // const unsigned long powerButton = 0xFFA25D;
-const unsigned long funcStopButton = 0xFFE21D;
+// const unsigned long funcStopButton = 0xFFE21D;
 // const unsigned long decimalButton = 0xFF9867;
-const unsigned long stReptLBSAScrollButton = 0xFFB04F;
+// const unsigned long stReptLBSAScrollButton = 0xFFB04F;
 
 
 //IR values for black remote in dvd protocol
 //function buttons
 const unsigned long powerButton = 0x595E13FA; //dvd
 const unsigned long menuButton = 0xFBCEF2FA; //dvd
-const unsigned long okButton = 0x7404BC5A; //dvd
-const unsigned long leftButton = 0x343DF5DE; //dvd
-const unsigned long rightButton = 0xDFAA9A1F; //dvd
-const unsigned long frontButton = 0xFF2F577B; //dvd
-const unsigned long rearButton = 0x9BD466C2; //dvd
+const unsigned long playButton = 0xA887B57F; //dvd
+// const unsigned long leftButton = 0x343DF5DE; //dvd
+// const unsigned long rightButton = 0xDFAA9A1F; //dvd
+// const unsigned long frontButton = 0xFF2F577B; //dvd
+// const unsigned long rearButton = 0x9BD466C2; //dvd
 const unsigned long homeButton = 0xAE89EB62; //dvd
 const unsigned long enterButton = 0x7404BC5A; //dvd
 //number buttons
@@ -91,8 +92,14 @@ const unsigned long sevenButton = 0xD67AA6FF; //dvd
 const unsigned long eightButton = 0xE7F5ED5A; //dvd
 const unsigned long nineButton = 0xA772439B; //dvd
 const unsigned long decimalButton = 0xF708557B; //dvd
-// const unsigned long
-// const unsigned long
+
+const unsigned long channelBackButton = 0xB507765B; //dvd
+const unsigned long undoButton =  0x6D89E7DE;//dvd //bottom left
+const unsigned long preset1Button = 0xD5FD2EC3; //dvd
+const unsigned long frontButton = 0x9BD466C2; //dvd
+const unsigned long rightButton = 0xDFAA9A1F; //dvd
+const unsigned long rearButton = 0xFF2F577B; //dvd
+const unsigned long leftButton = 0x343DF5DE; //dvd
 // const unsigned long
 // const unsigned long
 // const unsigned long
@@ -185,8 +192,9 @@ float concurrent_movement_LBSAs() {
   computeDeltaArray(); //computes deltaArray differences
   // float deltaArray[] = {newSpringValues[0] - currentSpringValues[0],
   //                       newSpringValues[1] - currentSpringValues[1]};
+  lcd.print("Moving...");
   int arraySize = sizeof(deltaArray)/sizeof(float); //TESTING, CHANGE IT TO
-  float deltaMin = 100000; //set up the deltaMin first //this is some arbitrarily high value
+  float deltaMin = 15; //set up the deltaMin first //this is some arbitrarily high value
 
   //for however big deltaArray is, loop through and find the smallest delta
   //set that as the new deltaMin
@@ -199,16 +207,20 @@ float concurrent_movement_LBSAs() {
       Serial.println(deltaMin); //TESTING
     }
   }
-  return move_LBSAs(deltaMin, deltaArray, arraySize);
+  return move_LBSAs(deltaMin, arraySize);
 }
 
 void computeDeltaArray() {
   for (int i=0; i < sizeof(deltaArray)/sizeof(float); i++) {
+    Serial.print("DArray Before: "); //TESTING
+    Serial.println(deltaArray[i]); //TESTING
     deltaArray[i] = newSpringValues[i] - currentSpringValues[i];
+    Serial.print("DArray After: "); //TESTING
+    Serial.println(deltaArray[i]); //TESTING
   }
 }
 
-float move_LBSAs (float deltaMin, float deltaArray[], int arraySize) {
+float move_LBSAs (float deltaMin, int arraySize) {
   //do pulseDuration math
   numberOfSteps = abs(deltaMin) * stepsToInch; //convert deltaMin inches to steps
   Serial.print("Number Of Steps: "); //TESTING
@@ -237,6 +249,7 @@ float move_LBSAs (float deltaMin, float deltaArray[], int arraySize) {
     delayMicroseconds(pulseDuration); //the pulse
     for (int i=0; i < arraySize; i++) {
       if(deltaArray[i] != 0) {
+        // Serial.println("Off");
         digitalWrite(pulseArray[i], LOW); //turns the lbsa off
       }
     }
@@ -279,10 +292,10 @@ void loop(){
           lcd.clear();
         }
 
-        if (results.value == 0xFFE21D && activeSpring == -1) { //if its the first time pressing the funct/stop key
+        if (results.value == menuButton && activeSpring == -1) { //if its the first time pressing the funct/stop key
           activeSpring = 0; //0 = Front
         }
-        else if (results.value == 0xFFE21D && activeSpring != -1) {
+        else if (results.value == menuButton && activeSpring != -1) {
           activeSpring++;
           if (activeSpring > 3) {
             activeSpring = 0;
@@ -389,37 +402,47 @@ void loop(){
           break;
 
           //Previous Button
-          case backButton:
+          case undoButton:
+            activeString = "";
+            lcd.print("Cleared.");
           break;
 
-          case playStopButton:
-          lcd.print("Play/Stop"); //execute movements/calculations
+          // case playStopButton:
+          case playButton:
+          // lcd.print("Play/Stop"); //execute movements/calculations
           digitalWrite(redPin, HIGH); //start actions
           concurrent_movement_LBSAs();
           digitalWrite(redPin, LOW); //stop actions
           break;
 
-          case upButton: //linear actuators up
-		      // lcd.print("UP: DIR2 LOW");
-          break;
-
-          case downButton: //linear actuators down
-          // lcd.print("DOWN: DIR2 HIGH");
-          break;
-
 	        //NOTE: Power Button
           case powerButton: //ie set to zero before turning off
             reset_LBSAs();
-            // activeString="";
-      		  // lcd.setCursor(0,0); //first column, first row
-      		  // lcd.print("Nothing before <");
-      		  // lcd.setCursor(0,1); //first column, second row
-      		  // lcd.print(activeString); //does a printcheck, if printed something is wrong
-      		  // lcd.print("<");
+          break;
+
+          case preset1Button:
+          break;
+
+          // case preset2Button:
+          // break;
+          // case preset3Button:
+          // break;
+
+          case frontButton:
+          break;
+
+          case rightButton:
+          break;
+
+          case rearButton:
+          break;
+
+          case leftButton:
           break;
 
 	        //Func/Stop button
-          case funcStopButton:
+          case menuButton:
+          // case funcStopButton:
 		        switch(activeSpring){
               case 0:
               lcd.print("Front: ");
@@ -459,7 +482,8 @@ void loop(){
           break;
 
 	        //Note: this is "ST/REPT" button
-          case stReptLBSAScrollButton: //set the new value for the activeSpring
+          // case stReptLBSAScrollButton: //set the new value for the activeSpring
+          case enterButton:
             // lcd.setCursor(0,0); //first column, first row
   		      // lcd.print(activeSpring); //prints what spring it is writing to
             // lcd.setCursor(0,1); //set cursor to second row
@@ -491,6 +515,7 @@ void loop(){
               break;
 
               default:
+              Serial.println("Failed to assign, Completion: False");
               completion = false;
             } //end switchFindActiveSpring
 
