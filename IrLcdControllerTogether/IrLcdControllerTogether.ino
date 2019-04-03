@@ -13,11 +13,16 @@ const int RECV_PIN = 10; //initializing pin used for IR
 const int redPin = 8; //for LED data passthroughs
 const int greenPin = 9; //for LED data passthroughs
 
+//controller pinNums
+//rows
+
+//cols
+
 char *lbsaArray[] = {"front","left","rear","right"};
 
-int enableArray[] = {11,14}; //front,left,rear,right
-int dirArray[] = {12,15}; //front,left,rear,right
-int pulseArray[] = {13,16}; //front,left,rear,right
+const int enableArray[] = {11,14,17,20}; //front,left,rear,right
+const int dirArray[] = {12,15,18,21}; //front,left,rear,right
+const int pulseArray[] = {13,16,19,22}; //front,left,rear,right
 
 //GLOBAL VARIABLE DECLARATIONS_________________________________
 IRrecv irrecv(RECV_PIN); //initialize the IR receiver object
@@ -33,6 +38,7 @@ float numberOfSteps = 1600; //some arbitrary value/related to Microsteps and LBS
 int pulseDuration = 200;
 float currentSpringValues[] = {0,0,0,0}; //front,left,rear,right
 float newSpringValues[] = {0,0,0,0}; //front,left,rear,right
+float deltaArray[] = {0,0,0,0}; //make deltaArray a global variable
 char activeSpring = -1; //which spring value to set/change
 String activeString; //user inputted wanted value
 
@@ -112,15 +118,15 @@ void setup(){
   pinMode(dirArray[1], OUTPUT);
   pinMode(pulseArray[1], OUTPUT);
 
-  // //LBSA3 pinMode declaration
-  // pinMode(enableArray[2], OUTPUT);
-  // pinMode(dirArray[2], OUTPUT);
-  // pinMode(pulseArray[2], OUTPUT);
+  //LBSA3 pinMode declaration
+  pinMode(enableArray[2], OUTPUT);
+  pinMode(dirArray[2], OUTPUT);
+  pinMode(pulseArray[2], OUTPUT);
 
-  // //LBSA4 pinMode declaration
-  // pinMode(enableArray[3], OUTPUT);
-  // pinMode(dirArray[3], OUTPUT);
-  // pinMode(pulseArray[3], OUTPUT);
+  //LBSA4 pinMode declaration
+  pinMode(enableArray[3], OUTPUT);
+  pinMode(dirArray[3], OUTPUT);
+  pinMode(pulseArray[3], OUTPUT);
 }
 
 //resets all the lbsa
@@ -175,8 +181,9 @@ float concurrent_movement_LBSAs() {
   //                       newSpringValues[1] - currentSpringValues[1],
   //                       newSpringValues[2] - currentSpringValues[2],
   //                       newSpringValues[3] - currentSpringValues[3]};
-  float deltaArray[] = {newSpringValues[0] - currentSpringValues[0],
-                        newSpringValues[1] - currentSpringValues[1]};
+  computeDeltaArray(); //computes deltaArray differences
+  // float deltaArray[] = {newSpringValues[0] - currentSpringValues[0],
+  //                       newSpringValues[1] - currentSpringValues[1]};
   int arraySize = sizeof(deltaArray)/sizeof(float); //TESTING, CHANGE IT TO
   float deltaMin = 100000; //set up the deltaMin first //this is some arbitrarily high value
 
@@ -192,6 +199,12 @@ float concurrent_movement_LBSAs() {
     }
   }
   return move_LBSAs(deltaMin, deltaArray, arraySize);
+}
+
+void computeDeltaArray() {
+  for (int i=0; i < sizeof(deltaArray)/sizeof(float); i++) {
+    deltaArray[i] = newSpringValues[i] - currentSpringValues[i]
+  }
 }
 
 float move_LBSAs (float deltaMin, float deltaArray[], int arraySize) {
