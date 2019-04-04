@@ -20,9 +20,9 @@ const int greenPin = 9; //for LED data passthroughs
 
 char *lbsaArray[] = {"front","left","rear","right"};
 
-const int enableArray[] = {11,14,17,20}; //front,left,rear,right
-const int dirArray[] = {12,15,18,21}; //front,left,rear,right
-const int pulseArray[] = {13,16,19,22}; //front,left,rear,right
+const int enableArray[] = {22,25,28,31}; //front,left,rear,right
+const int dirArray[] = {23,26,29,32}; //front,left,rear,right
+const int pulseArray[] = {24,27,30,33}; //front,left,rear,right
 
 //GLOBAL VARIABLE DECLARATIONS_________________________________
 IRrecv irrecv(RECV_PIN); //initialize the IR receiver object
@@ -142,9 +142,10 @@ float reset_LBSAs() {
   // newSpringValues = {0,0,0,0} //front,left,rear,right //sets everything to 0
   int arraySize = sizeof(newSpringValues)/sizeof(float);
   for (int i = 0; i < arraySize; i++) {
-    newSpringValues[i] = 0;
+    if(newSpringValues[i] != 0) {
+      newSpringValues[i] = 0;
+    }
   }
-  // float x = concurrent_movement_LBSAs();
   //as long as there is a non-zero delta, recursive call
   //can probably put this in the calling function?
   for(int i = 0; i < arraySize; i++) {
