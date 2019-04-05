@@ -146,13 +146,14 @@ float reset_LBSAs() {
       newSpringValues[i] = 0;
     }
   }
-  //as long as there is a non-zero delta, recursive call
-  //can probably put this in the calling function?
-  for(int i = 0; i < arraySize; i++) {
-    if ( currentSpringValues[i] != 0 ) {
-      concurrent_movement_LBSAs();
-    }
-  }
+  concurrent_movement_LBSAs();
+  // //as long as there is a non-zero delta, recursive call
+  // //can probably put this in the calling function?
+  // for(int i = 0; i < arraySize; i++) {
+  //   if ( currentSpringValues[i] != 0 ) {
+  //     concurrent_movement_LBSAs();
+  //   }
+  // }
 }
 
 //takes in cur spring val and new spring val, cur spring, and it's 3 pinNums //TODO ISSUE WITH ROUNDING
@@ -186,14 +187,8 @@ float moveSpecificLBSA( float currentSpringValue,
 }
 
 float concurrent_movement_LBSAs() {
-  // float deltaArray[] = {newSpringValues[0] - currentSpringValues[0],
-  //                       newSpringValues[1] - currentSpringValues[1],
-  //                       newSpringValues[2] - currentSpringValues[2],
-  //                       newSpringValues[3] - currentSpringValues[3]};
   computeDeltaArray(); //computes deltaArray differences
-  // float deltaArray[] = {newSpringValues[0] - currentSpringValues[0],
-  //                       newSpringValues[1] - currentSpringValues[1]};
-  lcd.print("Moving...");
+
   int arraySize = sizeof(deltaArray)/sizeof(float); //TESTING, CHANGE IT TO
   float deltaMin = 15; //set up the deltaMin first //this is some arbitrarily high value
 
@@ -208,7 +203,22 @@ float concurrent_movement_LBSAs() {
       Serial.println(deltaMin); //TESTING
     }
   }
-  return move_LBSAs(deltaMin, arraySize);
+  if (deltaMin == 15) {
+    lcd.print("|");
+    return -1; //no movement
+  }
+  else {
+    lcd.print(".");
+    //as long as there is a non-zero delta, keep moving
+    move_LBSAs(deltaMin, arraySize);
+    for(int i = 0; i < arraySize; i++) {
+      if ( deltaArray[i] != 0 ) {
+        concurrent_movement_LBSAs();
+      }
+    }
+
+  }
+
 }
 
 void computeDeltaArray() {
@@ -255,10 +265,10 @@ float move_LBSAs (float deltaMin, int arraySize) {
       }
     }
   }
-  //turn off all the pins
-  for(int i=0; i < arraySize; i++) {
-    digitalWrite(pulseArray[i], LOW);
-  }
+  // //turn off all the pins
+  // for(int i=0; i < arraySize; i++) {
+  //   digitalWrite(pulseArray[i], LOW);
+  // }
 
   //do distance updation
   for(int i=0; i < arraySize; i++) {
@@ -430,15 +440,31 @@ void loop(){
           // break;
 
           case frontButton:
-          break;
-
-          case rightButton:
-          break;
-
-          case rearButton:
+            currentSpringValues[0] = activeString.toFloat();
+            lcd.print("Front set: ");
+            lcd.print(currentSpringValues[0],10);
+            activeString = "";
           break;
 
           case leftButton:
+            currentSpringValues[1] = activeString.toFloat();
+            lcd.print("Left set: ");
+            lcd.print(currentSpringValues[1],10);
+            activeString = "";
+          break;
+
+          case rearButton:
+            currentSpringValues[2] = activeString.toFloat();
+            lcd.print("Rear set: ");
+            lcd.print(currentSpringValues[2],10);
+            activeString = "";
+          break;
+
+          case rightButton:
+            currentSpringValues[3] = activeString.toFloat();
+            lcd.print("Right set: ");
+            lcd.print(currentSpringValues[3],10);
+            activeString = "";
           break;
 
 	        //Func/Stop button

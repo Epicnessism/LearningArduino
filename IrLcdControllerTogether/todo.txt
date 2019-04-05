@@ -1,7 +1,3 @@
-Get remaining the dvd values from the remote control
-
-wire up the stepper driver + LBSA
-wire up the stepper driver + LBSA
 
 
 comment out and cut move_specificl_lbsa from code and replace with just move.
