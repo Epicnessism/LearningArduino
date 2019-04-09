@@ -5,8 +5,8 @@
 
 #include <Keypad.h> //required for Keypad library to be used
 //reference link: https://playground.arduino.cc/Code/Keypad/
-//https://www.arduino.cc/en/Tutorial/RowColumnScanning
-
+//more arduino matrixing:   https://www.arduino.cc/en/Tutorial/RowColumnScanning
+//ghosting/masking: http://weirdscience.us/index.php/2017/03/01/ghosting-and-masking/
 
 const byte rows = 4; //four rows
 const byte cols = 3; //three columns
