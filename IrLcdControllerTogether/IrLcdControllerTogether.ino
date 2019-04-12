@@ -5,6 +5,7 @@
 
 #include <IRremote.h> //for IR remote control
 #include <LiquidCrystal.h> //for using the LCD screen
+#include <Keypad.h> //required for Keypad library to be used
 
 
 //PIN DECLARATIONS______________________________________________
@@ -13,10 +14,20 @@ const int RECV_PIN = 10; //initializing pin used for IR
 const int redPin = 8; //for LED data passthroughs
 const int greenPin = 9; //for LED data passthroughs
 
-//controller pinNums
-//rows
 
-//cols
+//controller pin setup
+const byte rows = 4; //four rows
+const byte cols = 6; //three columns
+char keys[rows][cols] = {
+  {'1', '2', '3', 's', 'f', 'b'},
+  {'4', '5', '6', 'd', 'l', 'r'},
+  {'7', '8', '9'},
+  {'.', '0', 'e', 'A', 'B', 'C'}
+};
+
+byte rowPins[rows] = {34, 35, 36, 37}; //connect to the row pinouts of the keypad
+byte colPins[cols] = {38, 39, 40, 41, 42, 43}; //connect to the column pinouts of the keypad
+Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 
 char *lbsaArray[] = {"front","left","rear","right"};
 
@@ -46,27 +57,12 @@ String activeString; //user inputted wanted value
 
 
 //IR values for small remote in unknown protocol
-// const unsigned long zeroButton = 0xFF6897;
-// const unsigned long oneButton = 0xFF30CF;
-// const unsigned long twoButton = 0xFF18E7;
-// const unsigned long threeButton = 0xFF7A85;
-// const unsigned long fourButton = 0xFF10EF;
-// const unsigned long fiveButton = 0xFF38C7;
-// const unsigned long sixButton = 0xFF5AA5;
-// const unsigned long sevenButton = 0xFF42BD;
-// const unsigned long eightButton = 0xFF4AB5;
-// const unsigned long nineButton = 0xFF52AD;
 const unsigned long volumeUpButton = 0xFF629D;
 const unsigned long volumeDownButton = 0xFFA857;
 const unsigned long nextButton = 0xFFC23D;
 const unsigned long backButton = 0xFF22DD;
-// const unsigned long playStopButton = 0xFF02FD;
 const unsigned long upButton = 0xFF906F; //frontButton
 const unsigned long downButton = 0xFFE01F; //rearButton
-// const unsigned long powerButton = 0xFFA25D;
-// const unsigned long funcStopButton = 0xFFE21D;
-// const unsigned long decimalButton = 0xFF9867;
-// const unsigned long stReptLBSAScrollButton = 0xFFB04F;
 
 
 //IR values for black remote in dvd protocol
@@ -74,10 +70,6 @@ const unsigned long downButton = 0xFFE01F; //rearButton
 const unsigned long powerButton = 0x595E13FA; //dvd
 const unsigned long menuButton = 0xFBCEF2FA; //dvd
 const unsigned long playButton = 0xA887B57F; //dvd
-// const unsigned long leftButton = 0x343DF5DE; //dvd
-// const unsigned long rightButton = 0xDFAA9A1F; //dvd
-// const unsigned long frontButton = 0xFF2F577B; //dvd
-// const unsigned long rearButton = 0x9BD466C2; //dvd
 const unsigned long homeButton = 0xAE89EB62; //dvd
 const unsigned long enterButton = 0x7404BC5A; //dvd
 //number buttons
@@ -147,13 +139,6 @@ float reset_LBSAs() {
     }
   }
   concurrent_movement_LBSAs();
-  // //as long as there is a non-zero delta, recursive call
-  // //can probably put this in the calling function?
-  // for(int i = 0; i < arraySize; i++) {
-  //   if ( currentSpringValues[i] != 0 ) {
-  //     concurrent_movement_LBSAs();
-  //   }
-  // }
 }
 
 //takes in cur spring val and new spring val, cur spring, and it's 3 pinNums //TODO ISSUE WITH ROUNDING
@@ -294,6 +279,29 @@ float move_LBSAs (float deltaMin, int arraySize) {
 
 
 void loop(){
+  //keypad control method
+  char key = keypad.getKey();
+  if (key != NO_KEY){
+    Serial.println(key);
+  }
+  //check if the same as the last key, lcd.clear()
+  switch(key) {
+    case '1':
+      activeString += "1";
+      lcd.print(activeString);
+      break;
+    case '2':
+      activeString += "2";
+      lcd.print(activeString);
+      break;
+    case 'e':
+      digitalWrite(redPin, HIGH); //start actions
+      concurrent_movement_LBSAs();
+      digitalWrite(redPin, LOW); //stop actions
+      break;
+  }
+
+  //IR controller method
   if (irrecv.decode(&results)){
         Serial.println(results.value, HEX); //this is for debugging, shows IR input in Serial Monitor
 
@@ -420,7 +428,6 @@ void loop(){
 
           // case playStopButton:
           case playButton:
-          // lcd.print("Play/Stop"); //execute movements/calculations
           digitalWrite(redPin, HIGH); //start actions
           concurrent_movement_LBSAs();
           digitalWrite(redPin, LOW); //stop actions
