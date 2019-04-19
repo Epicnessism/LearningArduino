@@ -5,7 +5,7 @@
 
 #include <IRremote.h> //for IR remote control
 #include <LiquidCrystal.h> //for using the LCD screen
-#include <Keypad.h> //required for Keypad library to be used
+#include <Keypad.h> //required for Keypad matrix to be used
 
 
 //PIN DECLARATIONS______________________________________________
@@ -43,7 +43,6 @@ decode_results results; //results from IR sensors but wtf type is this
 //PULSEDURATION: 200 MS
 //1600 Microsteps
 //guesstimated stepstoInche = 4050
-//TODO
 
 unsigned long key_value = 0; //current/previous hex value
 int stepsToInch = 4050; //current arbitrary value for calculating inches to steps
@@ -54,16 +53,6 @@ float newSpringValues[] = {0,0,0,0}; //front,left,rear,right
 float deltaArray[] = {0,0,0,0}; //make deltaArray a global variable
 char activeSpring = -1; //which spring value to set/change
 String activeString; //user inputted wanted value
-
-
-//IR values for small remote in unknown protocol
-const unsigned long volumeUpButton = 0xFF629D;
-const unsigned long volumeDownButton = 0xFFA857;
-const unsigned long nextButton = 0xFFC23D;
-const unsigned long backButton = 0xFF22DD;
-const unsigned long upButton = 0xFF906F; //frontButton
-const unsigned long downButton = 0xFFE01F; //rearButton
-
 
 //IR values for black remote in dvd protocol
 //function buttons
@@ -92,10 +81,6 @@ const unsigned long frontButton = 0x9BD466C2; //dvd
 const unsigned long rightButton = 0xDFAA9A1F; //dvd
 const unsigned long rearButton = 0xFF2F577B; //dvd
 const unsigned long leftButton = 0x343DF5DE; //dvd
-// const unsigned long
-// const unsigned long
-// const unsigned long
-// const unsigned long
 
 void setup(){
   Serial.begin(9600); //I believe this begins the Serial Monitor?
@@ -141,36 +126,6 @@ float reset_LBSAs() {
   concurrent_movement_LBSAs();
 }
 
-//takes in cur spring val and new spring val, cur spring, and it's 3 pinNums //TODO ISSUE WITH ROUNDING
-float moveSpecificLBSA( float currentSpringValue,
-                        float newSpringValue,
-                        String currentSpring,
-                        int dir,
-                        int enable,
-                        int pulse) {
-  lcd.print("Was:" + String(currentSpringValue) + " To:" + String(newSpringValue));
-  //doing math conversion from inches to steps
-  Serial.println("new " + currentSpring + " is: " + String(newSpringValue));
-  Serial.println("current " + currentSpring + " is: " + String(currentSpringValue));
-  numberOfSteps = abs(newSpringValue - currentSpringValue) * stepsToInch;
-  Serial.println("number of steps to take is: " + String(numberOfSteps));
-
-  for(int i = 0; i < numberOfSteps; i++) {
-    if((newSpringValue - currentSpringValue) < 0) {
-      digitalWrite(dir, LOW); //THIS GOES BACKWARDS FOR NOW //TODO GIVE VALUE FOR HIGH
-    }
-    else {
-      digitalWrite(dir, HIGH); //THIS GOES Forward or away from the motor
-    }
-    digitalWrite(enable, HIGH); //TODO GIVE VALUE FOR HIGH //maybe we  don't need this
-    digitalWrite(pulse, HIGH); //activates pulse
-    delayMicroseconds(pulseDuration);
-    digitalWrite(pulse, LOW); //turns off the pulse
-    delayMicroseconds(pulseDuration);
-  }
-  return newSpringValue;
-}
-
 float concurrent_movement_LBSAs() {
   computeDeltaArray(); //computes deltaArray differences
 
@@ -201,9 +156,7 @@ float concurrent_movement_LBSAs() {
         concurrent_movement_LBSAs();
       }
     }
-
   }
-
 }
 
 void computeDeltaArray() {
@@ -237,11 +190,6 @@ float move_LBSAs (float deltaMin, int arraySize) {
         digitalWrite(pulseArray[i], HIGH);
       }
     }
-    // for (int i=0; i < arraySize; i++) {
-    //   if(deltaArray[i] != 0) {
-    //     digitalWrite(pulseArray[i], HIGH); //turns the lbsa off
-    //   }
-    // }
     delayMicroseconds(pulseDuration); //the pulse
     for (int i=0; i < arraySize; i++) {
       if(deltaArray[i] != 0) {
@@ -250,10 +198,6 @@ float move_LBSAs (float deltaMin, int arraySize) {
       }
     }
   }
-  // //turn off all the pins
-  // for(int i=0; i < arraySize; i++) {
-  //   digitalWrite(pulseArray[i], LOW);
-  // }
 
   //do distance updation
   for(int i=0; i < arraySize; i++) {
@@ -266,15 +210,6 @@ float move_LBSAs (float deltaMin, int arraySize) {
     Serial.print("new current Position value: "); //visual feedback //add LCD feedback later
     Serial.println(currentSpringValues[i]);
   }
-
-  // //as long as there is a non-zero delta, recursive call
-  // //can probably put this in the calling function?
-  // for(int i=1; i < arraySize; i++) {
-  //   if ( deltaArray[i] != 0 ) {
-  //     concurrent_movement_LBSAs();
-  //     break;
-  //   }
-  // }
 }
 
 
@@ -398,26 +333,6 @@ void loop(){
           case nineButton:
           activeString += "9";
           lcd.print(activeString);
-          break;
-
-          case volumeUpButton:
-            lcd.print("Vol+"); //TODO NEED A DIFF KEY FOR THIS
-            //set pulseDuration i to active value
-            pulseDuration = activeString.toFloat();
-            activeString="";
-          break;
-
-          //calculates direction and stepDifference for the front Spring
-          //FRONT LBSA1
-          case volumeDownButton:
-            currentSpringValues[0] = moveSpecificLBSA(currentSpringValues[0], newSpringValues[0], lbsaArray[0], dirArray[0], enableArray[0], pulseArray[0]);
-          break;
-
-		      //Next Button
-          //Direction LOW
-          //LEFT LBSA2
-          case nextButton:
-            currentSpringValues[1] = moveSpecificLBSA(currentSpringValues[1], newSpringValues[1], lbsaArray[1], dirArray[1], enableArray[1], pulseArray[1]);
           break;
 
           //Previous Button
