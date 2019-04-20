@@ -6,17 +6,37 @@ https://forum.arduino.cc/index.php?topic=521368.0
 if(irrecv.decode(&results))
  {
     if(results.value != rep){ x=results.value;}
-   
-    while(x==up) 
+
+    while(x==up)
      {
       digitalWrite(13,1);
-      
+
      }
     digitalWrite(13,0);
 
     irrecv.resume();
 
- } 
- 
- 
- 
+ }
+
+
+
+Deprecated Code that may still be needed later:
+//Holding down forward/right lbsa1
+else if (key_value == 0xFFC23D && results.value == 0XFFFFFFFF) { //TODO THIS DOESNT WORK?
+  results.value = key_value;
+}
+//Holding down back/left
+else if (key_value == 0xFF22DD && results.value == 0XFFFFFFFF) {
+  results.value = key_value;
+}
+//Holding down up/down buttons lbsa2
+else if (key_value == 0xFF906F && results.value == 0XFFFFFFFF) { //TODO THIS DOESNT WORK?
+  results.value = key_value;
+}
+//Holding down back/left
+else if (key_value == 0xFFE01F && results.value == 0XFFFFFFFF) {
+  results.value = key_value;
+}
+else if (key_value == 0xFF02FD && results.value == 0XFFFFFFFF) {
+  results.value = key_value;
+}

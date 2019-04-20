@@ -61,6 +61,13 @@ const unsigned long menuButton = 0xFBCEF2FA; //dvd
 const unsigned long playButton = 0xA887B57F; //dvd
 const unsigned long homeButton = 0xAE89EB62; //dvd
 const unsigned long enterButton = 0x7404BC5A; //dvd
+const unsigned long channelBackButton = 0xB507765B; //dvd
+const unsigned long undoButton =  0x6D89E7DE; //dvd //bottom left
+const unsigned long preset1Button = 0xD5FD2EC3; //dvd
+const unsigned long frontButton = 0x9BD466C2; //dvd
+const unsigned long rightButton = 0xDFAA9A1F; //dvd
+const unsigned long rearButton = 0xFF2F577B; //dvd
+const unsigned long leftButton = 0x343DF5DE; //dvd
 //number buttons
 const unsigned long zeroButton = 0x7885BE56; //dvd
 const unsigned long oneButton = 0x4C0F819F; //dvd
@@ -74,13 +81,6 @@ const unsigned long eightButton = 0xE7F5ED5A; //dvd
 const unsigned long nineButton = 0xA772439B; //dvd
 const unsigned long decimalButton = 0xF708557B; //dvd
 
-const unsigned long channelBackButton = 0xB507765B; //dvd
-const unsigned long undoButton =  0x6D89E7DE;//dvd //bottom left
-const unsigned long preset1Button = 0xD5FD2EC3; //dvd
-const unsigned long frontButton = 0x9BD466C2; //dvd
-const unsigned long rightButton = 0xDFAA9A1F; //dvd
-const unsigned long rearButton = 0xFF2F577B; //dvd
-const unsigned long leftButton = 0x343DF5DE; //dvd
 
 void setup(){
   Serial.begin(9600); //I believe this begins the Serial Monitor?
@@ -255,238 +255,219 @@ void loop(){
             activeSpring = 0;
           }
         }
-        //Holding down forward/right lbsa1
-        else if (key_value == 0xFFC23D && results.value == 0XFFFFFFFF) { //TODO THIS DOESNT WORK?
-          results.value = key_value;
-        }
-        //Holding down back/left
-        else if (key_value == 0xFF22DD && results.value == 0XFFFFFFFF) {
-          results.value = key_value;
-        }
-        //Holding down up/down buttons lbsa2
-        else if (key_value == 0xFF906F && results.value == 0XFFFFFFFF) { //TODO THIS DOESNT WORK?
-          results.value = key_value;
-        }
-        //Holding down back/left
-        else if (key_value == 0xFFE01F && results.value == 0XFFFFFFFF) {
-          results.value = key_value;
-        }
-        else if (key_value == 0xFF02FD && results.value == 0XFFFFFFFF) {
-          results.value = key_value;
-        }
+
 
 		Serial.println(zeroButton);
 		if (results.value == zeroButton) {
 			Serial.println("results.value is a zero hex value dude...");
 		}
-
 		// lcd.setCursor(0,1); //second row //default set to second row, eliminates ~13 lines of code
-        switch(results.value){
-          case 0XFFFFFFFF: //wtf is this for?? //TODO
+    switch(results.value){
+      case 0XFFFFFFFF: //wtf is this for?? //TODO
+      break;
+
+      case zeroButton:
+      activeString += "0";
+      lcd.print(activeString);
+      break;
+
+      case oneButton:
+      activeString += "1";
+      lcd.print(activeString);
+      break;
+
+      case twoButton:
+      activeString += "2";
+      lcd.print(activeString);
+      break;
+
+      case threeButton:
+      activeString += "3";
+      lcd.print(activeString);
+      break;
+
+      case fourButton:
+      activeString += "4";
+      lcd.print(activeString);
+      break;
+
+      case fiveButton:
+      activeString += "5";
+      lcd.print(activeString);
+      break;
+
+      case sixButton:
+      activeString += "6";
+      lcd.print(activeString);
+      break;
+
+      case sevenButton:
+      activeString += "7";
+      lcd.print(activeString);
+      break;
+
+      case eightButton:
+      activeString += "8";
+      lcd.print(activeString);
+      break;
+
+      case nineButton:
+      activeString += "9";
+      lcd.print(activeString);
+      break;
+
+      //Previous Button
+      case undoButton:
+        activeString = "";
+        lcd.print("Cleared.");
+      break;
+
+      // case playStopButton:
+      case playButton:
+      digitalWrite(redPin, HIGH); //start actions
+      concurrent_movement_LBSAs();
+      digitalWrite(redPin, LOW); //stop actions
+      break;
+
+      //NOTE: Power Button
+      case powerButton: //ie set to zero before turning off
+        reset_LBSAs();
+      break;
+
+      case preset1Button:
+      break;
+
+      // case preset2Button:
+      // break;
+      // case preset3Button:
+      // break;
+
+      case frontButton:
+        currentSpringValues[0] = activeString.toFloat();
+        lcd.print("Front set: ");
+        lcd.print(currentSpringValues[0],10);
+        activeString = "";
+      break;
+
+      case leftButton:
+        currentSpringValues[1] = activeString.toFloat();
+        lcd.print("Left set: ");
+        lcd.print(currentSpringValues[1],10);
+        activeString = "";
+      break;
+
+      case rearButton:
+        currentSpringValues[2] = activeString.toFloat();
+        lcd.print("Rear set: ");
+        lcd.print(currentSpringValues[2],10);
+        activeString = "";
+      break;
+
+      case rightButton:
+        currentSpringValues[3] = activeString.toFloat();
+        lcd.print("Right set: ");
+        lcd.print(currentSpringValues[3],10);
+        activeString = "";
+      break;
+
+      //Func/Stop button
+      case menuButton:
+      // case funcStopButton:
+        switch(activeSpring){
+          case 0:
+          lcd.print("Front: ");
+          lcd.print(currentSpringValues[0],6);
+          lcd.setCursor(0,1);
+          lcd.print("Target: ");
+          lcd.print(newSpringValues[0],6);
           break;
-
-          case zeroButton:
-          activeString += "0";
-          lcd.print(activeString);
+          case 1:
+          lcd.print("Left: ");
+          lcd.print(currentSpringValues[1],6);
+          lcd.setCursor(0,1);
+          lcd.print("Target: ");
+          lcd.print(newSpringValues[1],6);
           break;
-
-          case oneButton:
-          activeString += "1";
-          lcd.print(activeString);
+          case 2:
+          lcd.print("Rear: ");
+          lcd.print(currentSpringValues[2],6);
+          lcd.setCursor(0,1);
+          lcd.print("Target: ");
+          lcd.print(newSpringValues[2],6);
           break;
-
-          case twoButton:
-          activeString += "2";
-          lcd.print(activeString);
+          case 3:
+          lcd.print("Right: ");
+          lcd.print(currentSpringValues[3],6);
+          lcd.setCursor(0,1);
+          lcd.print("Target: ");
+          lcd.print(newSpringValues[3],6);
           break;
-
-          case threeButton:
-          activeString += "3";
-          lcd.print(activeString);
-          break;
-
-          case fourButton:
-          activeString += "4";
-          lcd.print(activeString);
-          break;
-
-          case fiveButton:
-          activeString += "5";
-          lcd.print(activeString);
-          break;
-
-          case sixButton:
-          activeString += "6";
-          lcd.print(activeString);
-          break;
-
-          case sevenButton:
-          activeString += "7";
-          lcd.print(activeString);
-          break;
-
-          case eightButton:
-          activeString += "8";
-          lcd.print(activeString);
-          break;
-
-          case nineButton:
-          activeString += "9";
-          lcd.print(activeString);
-          break;
-
-          //Previous Button
-          case undoButton:
-            activeString = "";
-            lcd.print("Cleared.");
-          break;
-
-          // case playStopButton:
-          case playButton:
-          digitalWrite(redPin, HIGH); //start actions
-          concurrent_movement_LBSAs();
-          digitalWrite(redPin, LOW); //stop actions
-          break;
-
-	        //NOTE: Power Button
-          case powerButton: //ie set to zero before turning off
-            reset_LBSAs();
-          break;
-
-          case preset1Button:
-          break;
-
-          // case preset2Button:
-          // break;
-          // case preset3Button:
-          // break;
-
-          case frontButton:
-            currentSpringValues[0] = activeString.toFloat();
-            lcd.print("Front set: ");
-            lcd.print(currentSpringValues[0],10);
-            activeString = "";
-          break;
-
-          case leftButton:
-            currentSpringValues[1] = activeString.toFloat();
-            lcd.print("Left set: ");
-            lcd.print(currentSpringValues[1],10);
-            activeString = "";
-          break;
-
-          case rearButton:
-            currentSpringValues[2] = activeString.toFloat();
-            lcd.print("Rear set: ");
-            lcd.print(currentSpringValues[2],10);
-            activeString = "";
-          break;
-
-          case rightButton:
-            currentSpringValues[3] = activeString.toFloat();
-            lcd.print("Right set: ");
-            lcd.print(currentSpringValues[3],10);
-            activeString = "";
-          break;
-
-	        //Func/Stop button
-          case menuButton:
-          // case funcStopButton:
-		        switch(activeSpring){
-              case 0:
-              lcd.print("Front: ");
-              lcd.print(currentSpringValues[0],6);
-              lcd.setCursor(0,1);
-              lcd.print("Target: ");
-              lcd.print(newSpringValues[0],6);
-              break;
-              case 1:
-              lcd.print("Left: ");
-              lcd.print(currentSpringValues[1],6);
-              lcd.setCursor(0,1);
-              lcd.print("Target: ");
-              lcd.print(newSpringValues[1],6);
-              break;
-              case 2:
-              lcd.print("Rear: ");
-              lcd.print(currentSpringValues[2],6);
-              lcd.setCursor(0,1);
-              lcd.print("Target: ");
-              lcd.print(newSpringValues[2],6);
-              break;
-              case 3:
-              lcd.print("Right: ");
-              lcd.print(currentSpringValues[3],6);
-              lcd.setCursor(0,1);
-              lcd.print("Target: ");
-              lcd.print(newSpringValues[3],6);
-              break;
-            }
-          break;
-
-          //Note: this is "EQ" button
-          case decimalButton:
-          activeString += ".";
-          lcd.print(activeString);
-          break;
-
-	        //Note: this is "ST/REPT" button
-          // case stReptLBSAScrollButton: //set the new value for the activeSpring
-          case enterButton:
-            // lcd.setCursor(0,0); //first column, first row
-  		      // lcd.print(activeSpring); //prints what spring it is writing to
-            // lcd.setCursor(0,1); //set cursor to second row
-
-            boolean completion = true;
-            switch(activeSpring) {
-              case 0: //front
-              newSpringValues[0] = activeString.toFloat();
-              lcd.print("Front set: ");
-  			      lcd.print(newSpringValues[0],6);
-              break;
-
-              case 1: //left
-              newSpringValues[1] = activeString.toFloat();
-              lcd.print("Left set: ");
-  			      lcd.print(newSpringValues[1],6);
-              break;
-
-              case 2: //rear
-              newSpringValues[2] = activeString.toFloat();
-              lcd.print("Rear set: ");
-  			      lcd.print(newSpringValues[2],6);
-              break;
-
-              case 3: //right
-              newSpringValues[3] = activeString.toFloat();
-              lcd.print("Right set: ");
-  			      lcd.print(newSpringValues[3],6);
-              break;
-
-              default:
-              Serial.println("Failed to assign, Completion: False");
-              completion = false;
-            } //end switchFindActiveSpring
-
-            if(completion) { //error handling?? lmao
-              activeString = "";
-              activeSpring = -1; //TODO do we want set the activeSpring to "null" after making a set
-
-              digitalWrite(greenPin, HIGH); //blink greenLED to confirm set
-              delay(500);
-              digitalWrite(greenPin, LOW);
-            }
-      		  else {
-      			digitalWrite(redPin, HIGH); //blinks redLED failure!
-            delay(500);
-            digitalWrite(redPin, LOW);
-      		  }
-          break;
-        } //end switchRemote
-
-        if(results.value != 0XFFFFFFFF) { //TODO: wtf does this do?
-          key_value = results.value;
         }
+      break;
+
+      //Note: this is "EQ" button
+      case decimalButton:
+      activeString += ".";
+      lcd.print(activeString);
+      break;
+
+      //Note: this is "ST/REPT" button
+      // case stReptLBSAScrollButton: //set the new value for the activeSpring
+      case enterButton:
+        // lcd.setCursor(0,0); //first column, first row
+	      // lcd.print(activeSpring); //prints what spring it is writing to
+        // lcd.setCursor(0,1); //set cursor to second row
+
+        boolean completion = true;
+        switch(activeSpring) {
+          case 0: //front
+          newSpringValues[0] = activeString.toFloat();
+          lcd.print("Front set: ");
+		      lcd.print(newSpringValues[0],6);
+          break;
+
+          case 1: //left
+          newSpringValues[1] = activeString.toFloat();
+          lcd.print("Left set: ");
+		      lcd.print(newSpringValues[1],6);
+          break;
+
+          case 2: //rear
+          newSpringValues[2] = activeString.toFloat();
+          lcd.print("Rear set: ");
+		      lcd.print(newSpringValues[2],6);
+          break;
+
+          case 3: //right
+          newSpringValues[3] = activeString.toFloat();
+          lcd.print("Right set: ");
+		      lcd.print(newSpringValues[3],6);
+          break;
+
+          default:
+          Serial.println("Failed to assign, Completion: False");
+          completion = false;
+        } //end switchFindActiveSpring
+
+        if(completion) { //error handling?? lmao
+          activeString = "";
+          activeSpring = -1; //TODO do we want set the activeSpring to "null" after making a set
+
+          digitalWrite(greenPin, HIGH); //blink greenLED to confirm set
+          delay(500);
+          digitalWrite(greenPin, LOW);
+        }
+  		  else {
+  			digitalWrite(redPin, HIGH); //blinks redLED failure!
+        delay(500);
+        digitalWrite(redPin, LOW);
+  		  }
+      break;
+    } //end switchRemote
+
+    if(results.value != 0XFFFFFFFF) { //TODO: wtf does this do? //try delete this later
+      key_value = results.value;
+    }
   irrecv.resume();
   }
 }
