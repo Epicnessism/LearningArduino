@@ -47,9 +47,10 @@ decode_results results; //results from IR sensors but wtf type is this
 unsigned long key_value = 0; //current/previous hex value
 int stepsToInch = 4050; //current arbitrary value for calculating inches to steps
 float numberOfSteps = 1600; //some arbitrary value/related to Microsteps and LBSAs
-int pulseDuration = 200;
+int pulseDuration = 250;
 float currentSpringValues[] = {0,0,0,0}; //front,left,rear,right
 float newSpringValues[] = {0,0,0,0}; //front,left,rear,right
+float preset1Values[] = {1,2,3,4};
 float deltaArray[] = {0,0,0,0}; //make deltaArray a global variable
 char activeSpring = -1; //which spring value to set/change
 String activeString; //user inputted wanted value
@@ -63,7 +64,7 @@ const unsigned long homeButton = 0xAE89EB62; //dvd
 const unsigned long enterButton = 0x7404BC5A; //dvd
 const unsigned long channelBackButton = 0xB507765B; //dvd
 const unsigned long undoButton =  0x6D89E7DE; //dvd //bottom left
-const unsigned long preset1Button = 0xD5FD2EC3; //dvd
+const unsigned long preset1Button = 0xD0AB87F6; //dvd //star button
 const unsigned long frontButton = 0x9BD466C2; //dvd
 const unsigned long rightButton = 0xDFAA9A1F; //dvd
 const unsigned long rearButton = 0xFF2F577B; //dvd
@@ -176,18 +177,23 @@ float move_LBSAs (float deltaMin, int arraySize) {
   Serial.println(numberOfSteps); //TESTING
 
   //run the pulse for this number of steps
-  for (int i=0; i < numberOfSteps; i++) {
+  for (int n=0; n < numberOfSteps; n++) {
     for (int i=0; i < arraySize; i++) { //inner forloop activates all the lbsas prior to stepping
-      if(deltaArray[i] != 0) { //dont activate lbsa if there is no delta
-        if(deltaArray[i] < 0) { //checeks direction lbsa needs to move
-          digitalWrite(dirArray[i], LOW); //low is [ ]
-        }
-        else {
-          digitalWrite(dirArray[i], HIGH); //high is [ ]
-        }
-        digitalWrite(enableArray[i], HIGH); //this magical thing...
-        //sets the pulse to high...assumedly it goes fast enough that it doesn't matter
-        digitalWrite(pulseArray[i], HIGH);
+
+      if(deltaArray[i] < 0) { //checeks direction lbsa needs to move
+        digitalWrite(dirArray[i], LOW); //low is [ ]
+      }
+      else {
+        digitalWrite(dirArray[i], HIGH); //high is [ ]
+      }
+      digitalWrite(enableArray[i], HIGH); //this magical thing...
+      //sets the pulse to high...assumedly it goes fast enough that it doesn't matter
+      // digitalWrite(pulseArray[i], HIGH);
+    }
+
+    for (int i=0; i < arraySize; i++) {
+      if(deltaArray[i] != 0) {
+        digitalWrite(pulseArray[i], HIGH); //turns the lbsa off
       }
     }
     delayMicroseconds(pulseDuration); //the pulse
@@ -224,16 +230,24 @@ void loop(){
     case '1':
       activeString += "1";
       lcd.print(activeString);
-      break;
+    break;
     case '2':
       activeString += "2";
       lcd.print(activeString);
-      break;
+    break;
+    case '4':
+      activeString += "4";
+      lcd.print(activeString);
+    break;
+    case '5':
+      activeString += "5";
+      lcd.print(activeString);
+    break;
     case 'e':
       digitalWrite(redPin, HIGH); //start actions
       concurrent_movement_LBSAs();
       digitalWrite(redPin, LOW); //stop actions
-      break;
+    break;
   }
 
   //IR controller method
@@ -334,8 +348,7 @@ void loop(){
         reset_LBSAs();
       break;
 
-      case preset1Button:
-      break;
+
 
       // case preset2Button:
       // break;
@@ -409,6 +422,13 @@ void loop(){
       case decimalButton:
       activeString += ".";
       lcd.print(activeString);
+      break;
+
+      case preset1Button:
+        for (int i = 0; i < sizeof(newSpringValues)/sizeof(float); i++) {
+          newSpringValues[i] = preset1Values[i];
+        }
+        concurrent_movement_LBSAs();
       break;
 
       //Note: this is "ST/REPT" button
