@@ -1,15 +1,23 @@
+
+#include <LiquidCrystal.h>
+#include <LiquidCrystal_I2C.h>
+
+
+
+
 //Tony Wang
 //GMU Mechanical Engineering Multidisciplinary: Senior Design 2018-2019
 //other pertinent info
 //sources and credits:....tbd
 
 #include <IRremote.h> //for IR remote control
-#include <LiquidCrystal.h> //for using the LCD screen
+#include <Wire.h>
 #include <Keypad.h> //required for Keypad matrix to be used
 
 
 //PIN DECLARATIONS______________________________________________
-LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //initializing used pins
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
+//LiquidCrystal lcd4(7, 6, 5, 4, 3, 2); //initializing used pins
 const int RECV_PIN = 10; //initializing pin used for IR
 const int redPin = 8; //for LED data passthroughs
 const int greenPin = 9; //for LED data passthroughs
@@ -19,10 +27,10 @@ const int greenPin = 9; //for LED data passthroughs
 const byte rows = 4; //four rows
 const byte cols = 6; //three columns
 char keys[rows][cols] = {
-  {'1', '2', '3', 's', 'f', 'b'},
-  {'4', '5', '6', 'd', 'l', 'r'},
-  {'7', '8', '9'},
-  {'.', '0', 'e', 'A', 'B', 'C'}
+  {'1', '2', '3', 'm', 'f', 'b'}, //manualSet, frzont focus, back(rear) focus,
+  {'4', '5', '6', 'd', 'l', 'r'}, //Delete activeString, Left focus, Right focus,
+  {'7', '8', '9', 'x', 'h'}, //Execute, resetHome
+  {'.', '0', 'e', 'A', 'B', 'C'} //Preset A, Preset B, Preset C
 };
 
 byte rowPins[rows] = {34, 35, 36, 37}; //connect to the row pinouts of the keypad
@@ -54,6 +62,7 @@ float preset1Values[] = {1,2,3,4};
 float deltaArray[] = {0,0,0,0}; //make deltaArray a global variable
 char activeSpring = -1; //which spring value to set/change
 String activeString; //user inputted wanted value
+char lastKey = 'z';
 
 //IR values for black remote in dvd protocol
 //function buttons
@@ -88,7 +97,8 @@ void setup(){
   irrecv.enableIRIn(); //I think this enables the IR sensor input ability?
   irrecv.blink13(true); //wtf does this do?? //TODO
 
-  lcd.begin(16, 2); //begins the LCD screen, giving input designated size of screen
+  //lcd.begin(16,2);
+  lcd.begin(20, 4); //begins the LCD screen, giving input designated size of screen
 
   //LED pinModes, for visual cues
   pinMode(redPin, OUTPUT);
@@ -222,33 +232,139 @@ float move_LBSAs (float deltaMin, int arraySize) {
 void loop(){
   //keypad control method
   char key = keypad.getKey();
-  if (key != NO_KEY){
+  if(key != NO_KEY) {
     Serial.println(key);
+    lcd.setCursor(0,0);
+    lcd.clear();
   }
+//  if(key != NO_KEY && key != lastKey) {
+//    Serial.println("reset");
+//    lcd.setCursor(0,0);
+//    lcd.clear();
+//  }
+
   //check if the same as the last key, lcd.clear()
   switch(key) {
     case '1':
       activeString += "1";
+      Serial.println(activeString);
       lcd.print(activeString);
-    break;
+      break;
     case '2':
       activeString += "2";
       lcd.print(activeString);
-    break;
+      break;
+    case '3':
+      activeString += "3";
+      lcd.print(activeString);
+      break;
     case '4':
       activeString += "4";
       lcd.print(activeString);
-    break;
+      break;
     case '5':
       activeString += "5";
       lcd.print(activeString);
-    break;
-    case 'e':
+      break;
+    case '6':
+      activeString += "6";
+      lcd.print(activeString);
+      break;
+    case '7':
+      activeString += "7";
+      lcd.print(activeString);
+      break;
+    case '8':
+      activeString += "8";
+      lcd.print(activeString);
+      break;
+    case '9':
+      activeString += "9";
+      lcd.print(activeString);
+      break;
+    case '.':
+      activeString += ".";
+      lcd.print(activeString);
+      break;
+    case '0':
+      activeString += "0";
+      lcd.print(activeString);
+      break;
+    case 'e': //sets NEW target value of active spring
+      //use active spring as index
+      newSpringValues[activeSpring] = activeString.toFloat();
+      lcd.print(lbsaArray[activeSpring]);
+      lcd.print(" set: ");
+      lcd.print(newSpringValues[activeSpring],6);
+
+      activeString = "";
+      activeSpring = -1; //TODO do we want set the activeSpring to "null" after making a set
+
+      digitalWrite(greenPin, HIGH); //blink greenLED to confirm set
+      delay(500);
+      digitalWrite(greenPin, LOW);
+
+      break;
+    case 'd': //deletes activeString
+      activeString = "";
+      lcd.print("Cleared.");
+      break;
+    case 'x': //play/Execute deltas
       digitalWrite(redPin, HIGH); //start actions
       concurrent_movement_LBSAs();
       digitalWrite(redPin, LOW); //stop actions
-    break;
+      break;
+    case 'f': //front lbsa focus
+      activeSpring = 0;
+      lcd.print("Front at: ");
+      lcd.print(currentSpringValues[0],10);
+      lcd.setCursor(0,2);
+      lcd.print("Front target: ");
+      lcd.print(newSpringValues[0],10);
+      break;
+    case 'l': //front lbsa focus
+      activeSpring = 1;
+      lcd.print("Left at: ");
+      lcd.print(currentSpringValues[1],10);
+      lcd.setCursor(0,2);
+      lcd.print("Left target: ");
+      lcd.print(newSpringValues[1],10);
+      break;
+    case 'b': //front lbsa focus
+      activeSpring = 2;
+      lcd.print("Rear at: ");
+      lcd.print(currentSpringValues[2],10);
+      lcd.setCursor(0,2);
+      lcd.print("Rear target: ");
+      lcd.print(newSpringValues[2],10);
+      break;
+    case 'r': //front lbsa focus
+      activeSpring = 3;
+      lcd.print("Right at: ");
+      lcd.print(currentSpringValues[3],10);
+      lcd.setCursor(0,2);
+      lcd.print("Right target: ");
+      lcd.print(newSpringValues[3],10);
+      break;
+    case 'm':
+      currentSpringValues[activeSpring] = activeString.toFloat();
+      lcd.print(lbsaArray[activeSpring]);
+      lcd.print(" set: ");
+      lcd.print(currentSpringValues[activeSpring],10);
+      activeString = "";
+      break;
+    case 'h':
+      reset_LBSAs();
+      break;
   }
+  if (key != NO_KEY) {
+
+    lastKey = key;
+    Serial.println(lastKey);
+  }
+
+
+
 
   //IR controller method
   if (irrecv.decode(&results)){
@@ -338,15 +454,15 @@ void loop(){
 
       // case playStopButton:
       case playButton:
-      digitalWrite(redPin, HIGH); //start actions
-      concurrent_movement_LBSAs();
-      digitalWrite(redPin, LOW); //stop actions
-      break;
+        digitalWrite(redPin, HIGH); //start actions
+        concurrent_movement_LBSAs();
+        digitalWrite(redPin, LOW); //stop actions
+        break;
 
       //NOTE: Power Button
       case powerButton: //ie set to zero before turning off
         reset_LBSAs();
-      break;
+        break;
 
 
 
@@ -360,76 +476,76 @@ void loop(){
         lcd.print("Front set: ");
         lcd.print(currentSpringValues[0],10);
         activeString = "";
-      break;
+        break;
 
       case leftButton:
         currentSpringValues[1] = activeString.toFloat();
         lcd.print("Left set: ");
         lcd.print(currentSpringValues[1],10);
         activeString = "";
-      break;
+        break;
 
       case rearButton:
         currentSpringValues[2] = activeString.toFloat();
         lcd.print("Rear set: ");
         lcd.print(currentSpringValues[2],10);
         activeString = "";
-      break;
+        break;
 
       case rightButton:
         currentSpringValues[3] = activeString.toFloat();
         lcd.print("Right set: ");
         lcd.print(currentSpringValues[3],10);
         activeString = "";
-      break;
+        break;
 
       //Func/Stop button
       case menuButton:
       // case funcStopButton:
         switch(activeSpring){
           case 0:
-          lcd.print("Front: ");
-          lcd.print(currentSpringValues[0],6);
-          lcd.setCursor(0,1);
-          lcd.print("Target: ");
-          lcd.print(newSpringValues[0],6);
-          break;
+            lcd.print("Front: ");
+            lcd.print(currentSpringValues[0],6);
+            lcd.setCursor(0,1);
+            lcd.print("Target: ");
+            lcd.print(newSpringValues[0],6);
+            break;
           case 1:
-          lcd.print("Left: ");
-          lcd.print(currentSpringValues[1],6);
-          lcd.setCursor(0,1);
-          lcd.print("Target: ");
-          lcd.print(newSpringValues[1],6);
-          break;
+            lcd.print("Left: ");
+            lcd.print(currentSpringValues[1],6);
+            lcd.setCursor(0,1);
+            lcd.print("Target: ");
+            lcd.print(newSpringValues[1],6);
+            break;
           case 2:
-          lcd.print("Rear: ");
-          lcd.print(currentSpringValues[2],6);
-          lcd.setCursor(0,1);
-          lcd.print("Target: ");
-          lcd.print(newSpringValues[2],6);
-          break;
+            lcd.print("Rear: ");
+            lcd.print(currentSpringValues[2],6);
+            lcd.setCursor(0,1);
+            lcd.print("Target: ");
+            lcd.print(newSpringValues[2],6);
+            break;
           case 3:
-          lcd.print("Right: ");
-          lcd.print(currentSpringValues[3],6);
-          lcd.setCursor(0,1);
-          lcd.print("Target: ");
-          lcd.print(newSpringValues[3],6);
-          break;
+            lcd.print("Right: ");
+            lcd.print(currentSpringValues[3],6);
+            lcd.setCursor(0,1);
+            lcd.print("Target: ");
+            lcd.print(newSpringValues[3],6);
+            break;
         }
-      break;
+        break;
 
       //Note: this is "EQ" button
       case decimalButton:
-      activeString += ".";
-      lcd.print(activeString);
-      break;
+        activeString += ".";
+        lcd.print(activeString);
+        break;
 
       case preset1Button:
         for (int i = 0; i < sizeof(newSpringValues)/sizeof(float); i++) {
           newSpringValues[i] = preset1Values[i];
         }
         concurrent_movement_LBSAs();
-      break;
+        break;
 
       //Note: this is "ST/REPT" button
       // case stReptLBSAScrollButton: //set the new value for the activeSpring
@@ -441,28 +557,28 @@ void loop(){
         boolean completion = true;
         switch(activeSpring) {
           case 0: //front
-          newSpringValues[0] = activeString.toFloat();
-          lcd.print("Front set: ");
-		      lcd.print(newSpringValues[0],6);
-          break;
+            newSpringValues[0] = activeString.toFloat();
+            lcd.print("Front set: ");
+  		      lcd.print(newSpringValues[0],6);
+            break;
 
           case 1: //left
-          newSpringValues[1] = activeString.toFloat();
-          lcd.print("Left set: ");
-		      lcd.print(newSpringValues[1],6);
-          break;
+            newSpringValues[1] = activeString.toFloat();
+            lcd.print("Left set: ");
+  		      lcd.print(newSpringValues[1],6);
+            break;
 
           case 2: //rear
-          newSpringValues[2] = activeString.toFloat();
-          lcd.print("Rear set: ");
-		      lcd.print(newSpringValues[2],6);
-          break;
+            newSpringValues[2] = activeString.toFloat();
+            lcd.print("Rear set: ");
+  		      lcd.print(newSpringValues[2],6);
+            break;
 
           case 3: //right
-          newSpringValues[3] = activeString.toFloat();
-          lcd.print("Right set: ");
-		      lcd.print(newSpringValues[3],6);
-          break;
+            newSpringValues[3] = activeString.toFloat();
+            lcd.print("Right set: ");
+  		      lcd.print(newSpringValues[3],6);
+            break;
 
           default:
           Serial.println("Failed to assign, Completion: False");
