@@ -12,9 +12,9 @@ void loop()
 {
   int chk = DHT.read11(DHT11_PIN);
   Serial.println(chk);
-  Serial.print("Temperature = ");
+  Serial.print("Temperature =  ");
   Serial.println(DHT.temperature);
-  Serial.print("Humidity = ");
+  Serial.print("Humidity =  ");
   Serial.println(DHT.humidity);
   delay(1000);
 }
